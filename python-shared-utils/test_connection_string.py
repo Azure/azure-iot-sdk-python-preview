@@ -3,29 +3,29 @@ from connection_string import ConnectionString
 
 
 class TestConnectionStringInput(object):
-    @pytest.mark.xfail(raises=ValueError)
     def test_empty_input(self):
-        ConnectionString("")
+        with pytest.raises(ValueError):
+            ConnectionString("")
 
-    @pytest.mark.xfail(raises=ValueError)
     def test_garbage_input(self):
-        ConnectionString("garbage")
+        with pytest.raises(ValueError):
+            ConnectionString("garbage")
 
-    @pytest.mark.xfail(raises=ValueError)
     def test_incomplete_input(self):
-        ConnectionString("HostName=my.host.name")
+        with pytest.raises(ValueError):
+            ConnectionString("HostName=my.host.name")
 
-    @pytest.mark.xfail(raises=ValueError)
     def test_invalid_key(self):
-        ConnectionString(
-            "InvalidKey=my.host.name;SharedAccessKeyName=mykeyname;SharedAccessKey=Zm9vYmFy"
-        )
+        with pytest.raises(ValueError):
+            ConnectionString(
+                "InvalidKey=my.host.name;SharedAccessKeyName=mykeyname;SharedAccessKey=Zm9vYmFy"
+            )
 
-    @pytest.mark.xfail(raises=ValueError)
     def test_duplicate_key(self):
-        ConnectionString(
-            "HostName=my.host.name;HostName=my.host.name;SharedAccessKey=mykeyname;SharedAccessKey=Zm9vYmFy"
-        )
+        with pytest.raises(ValueError):
+            ConnectionString(
+                "HostName=my.host.name;HostName=my.host.name;SharedAccessKey=mykeyname;SharedAccessKey=Zm9vYmFy"
+            )
 
     def test_service_string(self):
         ConnectionString(
@@ -70,9 +70,9 @@ def test___getitem__item_exists():
     assert cs["SharedAccessKey"] == "Zm9vYmFy"
 
 
-@pytest.mark.xfail(raises=KeyError)
 def test___getitem__item_does_not_exist():
-    cs = ConnectionString(
-        "HostName=my.host.name;SharedAccessKeyName=mykeyname;SharedAccessKey=Zm9vYmFy"
-    )
-    cs["SharedAccessSignature"]
+    with pytest.raises(KeyError):
+        cs = ConnectionString(
+            "HostName=my.host.name;SharedAccessKeyName=mykeyname;SharedAccessKey=Zm9vYmFy"
+        )
+        cs["SharedAccessSignature"]

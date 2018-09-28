@@ -35,12 +35,12 @@ class TestCreateSasToken(object):
         expected_uri = "my+ch%C3%A2teu.host.name"
         assert s._uri == expected_uri
 
-    @pytest.mark.xfail(raises=SasTokenError)
     def test_key_not_base_64(self):
-        uri = "my.host.name"
-        key_name = "mykeyname"
-        key = "this is not base64"
-        SasToken(uri, key_name, key)
+        with pytest.raises(SasTokenError):
+            uri = "my.host.name"
+            key_name = "mykeyname"
+            key = "this is not base64"
+            SasToken(uri, key_name, key)
 
 
 class TestsOnValidSasToken(object):
