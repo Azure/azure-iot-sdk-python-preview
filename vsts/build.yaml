@@ -16,7 +16,7 @@ steps:
 - script: 'python -m pip install --upgrade pip'
   displayName: 'Update pip'
 
-- script: 'pip install -r python-shared-utils/requirements.txt'
+- script: 'pip install -r python_shared_utils/requirements.txt'
   displayName: 'Install dependencies'
 
 - script: 'pip install flake8 && flake8'
@@ -24,7 +24,7 @@ steps:
   enabled: false
   continueOnError: true
 
-- script: 'pytest python-shared-utils --junitxml=junit/test-results.xml'
+- script: 'pytest python_shared_utils --junitxml=junit/test-results.xml'
   displayName: pytest
 
 - task: PublishTestResults@2
