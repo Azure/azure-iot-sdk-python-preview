@@ -5,7 +5,7 @@ resources:
 queue:
   name: Hosted Linux Preview
 variables:
-  python.version: '2.7, 3.5, 3.6, >= 3.7.0a'
+  python.version: '2.7, 3.5, 3.6, 3.7'
 steps:
 - task: UsePythonVersion@0
   displayName: 'Use Python $(python.version)'
