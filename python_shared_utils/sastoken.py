@@ -58,9 +58,7 @@ class SasToken(object):
         String representation of the token
         """
         try:
-            message = (self._uri + "\n" + str(self.expiry_time)).encode(
-                self._encoding_type
-            )
+            message = (self._uri + "\n" + str(self.expiry_time)).encode(self._encoding_type)
             signing_key = base64.b64decode(self._key.encode(self._encoding_type))
             signed_hmac = hmac.HMAC(signing_key, message, hashlib.sha256)
             signature = urllib.parse.quote(base64.b64encode(signed_hmac.digest()))

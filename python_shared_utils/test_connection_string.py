@@ -33,9 +33,7 @@ class TestConnectionStringInput(object):
         )
 
     def test_device_string(self):
-        ConnectionString(
-            "HostName=my.host.name;DeviceId=my-device;SharedAccessKey=Zm9vYmFy"
-        )
+        ConnectionString("HostName=my.host.name;DeviceId=my-device;SharedAccessKey=Zm9vYmFy")
 
     def test_device_string_with_gateway_hostname(self):
         ConnectionString(
@@ -54,9 +52,7 @@ class TestConnectionStringInput(object):
 
 
 def test___repr__():
-    string = (
-        "HostName=my.host.name;SharedAccessKeyName=mykeyname;SharedAccessKey=Zm9vYmFy"
-    )
+    string = "HostName=my.host.name;SharedAccessKeyName=mykeyname;SharedAccessKey=Zm9vYmFy"
     cs = ConnectionString(string)
     assert str(cs) == string
 
