@@ -13,7 +13,7 @@ from subprocess import check_call
 if __name__ == "__main__":
     packages = [os.path.dirname(p) for p in glob.glob("azure*/setup.py")]
     for package_name in packages:
-        command = "pytest {} --junitxml=junit/{}-test-results.xml --cov-report=xml:{}-coverage.xml --cov-report=html:htmlcov".format(
+        command = "pytest {} --junitxml=junit/{}-test-results.xml --cov=azure --cov-report=xml:coverage/{}-coverage.xml --cov-report=html:coverage".format(
             package_name, package_name, package_name
         )
         check_call(command.split())
