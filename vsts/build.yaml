@@ -43,6 +43,6 @@ steps:
 - task: PublishCodeCoverageResults@1
   inputs:
     codeCoverageTool: 'cobertura'
-    summaryFileLocation: 'coverage/coverage.xml'
+    summaryFileLocation: 'coverage.xml'
     reportDirectory: 'coverage'
     failIfCoverageEmpty: true
