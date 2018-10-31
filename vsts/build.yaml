@@ -39,3 +39,10 @@ steps:
     testResultsFiles: '**/*-test-results.xml'
 
     testRunTitle: 'Python $(python.version)'
+
+- task: PublishCodeCoverageResults@1
+  inputs:
+    codeCoverageTool: 'cobertura'
+    summaryFileLocation: '**/*-coverage.xml'
+    reportDirectory: '**/htmlcov'
+    failIfCoverageEmpty: true
