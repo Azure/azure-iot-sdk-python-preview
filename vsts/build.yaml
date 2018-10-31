@@ -33,6 +33,9 @@ steps:
 - script: 'python test_packages.py'
   displayName: pytest
 
+- script: |
+    npm install
+
 - task: PublishTestResults@2
   displayName: 'Publish Test Results **/*-test-results.xml'
   inputs:
@@ -43,6 +46,6 @@ steps:
 - task: PublishCodeCoverageResults@1
   inputs:
     codeCoverageTool: 'cobertura'
-    summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage.xml'
-    #reportDirectory: '$(System.DefaultWorkingDirectory)/coverage'
+    summaryFileLocation: '$(Build.SourcesDirectory)/coverage.xml'
+    reportDirectory: '$(Build.SourcesDirectory)/coverage'
     failIfCoverageEmpty: true
