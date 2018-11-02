@@ -31,7 +31,6 @@ setup(
         "Programming Language :: Python :: 3.7",
     ],
     install_requires=[
-        "azure-iot-common",
         "six",
         "paho-mqtt==1.4.0",
         "transitions==0.6.8",
