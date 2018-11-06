@@ -62,8 +62,9 @@ class SymmetricKeyAuthenticationProvider(AuthenticationProvider):
         fields in the string. Also validates the required properties of the connection string.
         :param connection_string: The semicolon-delimited string of 'name=value' pairs.
         The input may look like the following formations:-
-        SharedAccessSignature sr=<resource_uri>&sig=<signature>&se=<expiry>
-        SharedAccessSignature sr=<resource_uri>&sig=<signature>&skn=<keyname>&se=<expiry>
+        HostName=<hostname>;DeviceId=<device_id>;SharedAccessKey=<shared_access_key>
+        HostName=<hostname>;DeviceId=<device_id>;SharedAccessKey=<shared_access_key>;SharedAccessKeyName=<key_name>
+        HostName=<hostname>;DeviceId=<device_id>;ModuleId=<module_id>;SharedAccessKey=<shared_access_key>;SharedAccessKeyName=<key_name>
         :return: The Symmetric Key Authentication Provider constructed
         """
         cs_args = connection_string.split(DELIMITER)
