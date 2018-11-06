@@ -5,7 +5,7 @@
 
 from setuptools import setup, find_packages
 
-with open('azure-iot-hub-devicesdk/doc/package-readme.md', 'r') as fh:
+with open('doc/package-readme.md', 'r') as fh:
     _long_description = fh.read()
 
 setup(
@@ -15,6 +15,7 @@ setup(
     license='MIT License',
     url='https://github.com/Azure/azure-iot-sdk-python',
     author='Microsoft Corporation',
+    author_email='opensource@microsoft.com',
     long_description=_long_description,
     long_description_content_type='text/markdown',
     classifiers=[
@@ -38,5 +39,6 @@ setup(
         'requests==2.20.0',
         'requests-unixsocket==0.1.5',
     ],
-    packages=find_packages(exclude=['tests']),
+    python_requires='=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3*, <4',
+    packages=find_packages(exclude=['tests', 'samples']),
 )
