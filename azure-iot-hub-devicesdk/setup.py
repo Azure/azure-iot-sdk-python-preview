@@ -5,12 +5,12 @@
 
 from setuptools import setup, find_packages
 
-with open('doc/package-readme.md', 'r') as fh:
+with open('azure-iot-hub-devicesdk/doc/package-readme.md', 'r') as fh:
     _long_description = fh.read()
 
 setup(
-    name='azure-iot-hub-devicesdk',
-    version='0.0.3',
+    name='azure_iot_hub_devicesdk',
+    version='0.0.1',
     description='Microsoft Azure IoT Hub Device SDK',
     license='MIT License',
     url='https://github.com/Azure/azure-iot-sdk-python',
