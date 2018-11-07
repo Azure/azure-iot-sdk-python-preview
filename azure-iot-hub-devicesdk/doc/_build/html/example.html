@@ -1,0 +1,226 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>&lt;no title&gt; &#8212; azure-iot-hub-devicesdk documentation 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="readme.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <p># Example</p>
+<p>This page is written in mixed markdown and reST.
+Source code is [here](<a class="reference external" href="https://github.com/miyakogi/m2r/blob/master/docs/example.md">https://github.com/miyakogi/m2r/blob/master/docs/example.md</a>).</p>
+<p>## Basic Markups (inline)</p>
+<p>A <strong>strong</strong>, <em>emphasis</em>, ~~deleted~~, <cite>code with single-backtick</cite>,
+<code class="docutils literal notranslate"><span class="pre">code</span> <span class="pre">with</span> <span class="pre">two-backticks</span></code>, <code class="docutils literal notranslate"><span class="pre">`code</span> <span class="pre">can</span> <span class="pre">include</span> <span class="pre">multiple</span> <span class="pre">(</span></code>) backticks```,
+<code class="code docutils literal notranslate"><span class="pre">reST's</span> <span class="pre">code</span> <span class="pre">role</span></code>, and &lt;del&gt;inline html&lt;/del&gt;delete.</p>
+<p>### Link</p>
+<p>Auto link to <a class="reference external" href="http://example.com/">http://example.com/</a>.</p>
+<p>Link to [example.com](<a class="reference external" href="http://example.com/">http://example.com/</a>) in markdown.</p>
+<p>Link to [anchor](#testlabel) in markdown.</p>
+<p>Link to [document](example.md) in markdown.</p>
+<p>Link to [document with anchor](example.md#testlabel) in markdown (doc directive does not support anchors, so this links to the document only).</p>
+<p>Link to <a class="reference external" href="http://example.com/">example.com</a> in reST.</p>
+<p>Link to <a class="reference external" href="http://example.com">example</a> in reST_ref.</p>
+<p>Link to [example.com](<a class="reference external" href="http://example.com/">http://example.com/</a> “example”) with title in markdown.</p>
+<p id="testlabel">## Basic Markups (block)</p>
+<p>This is a simple sentence.</p>
+<div class="line-block">
+<div class="line">sentence with</div>
+<div class="line">newlines</div>
+<div class="line">(reST)</div>
+</div>
+<p>Sentence with
+hard-wrap (markdown, trailing two spaces)</p>
+<p>&gt; block quote
+&gt; second line
+&gt; &gt; nested quote</p>
+<p>—</p>
+<p>&lt;div style=”color: red;”&gt;This is a red, raw-html block.&lt;/div&gt;</p>
+<p>&gt; Block quote after raw-html directive</p>
+<p>### List</p>
+<p>#### Unordered list</p>
+<ul class="simple">
+<li>unordered list
+new line</li>
+<li>next item<ul>
+<li>nested list
+with new line</li>
+<li>nested list item 2</li>
+</ul>
+</li>
+<li>original depth<ol class="arabic">
+<li>ordered list item</li>
+<li>second
+with new line</li>
+</ol>
+</li>
+<li>original depth again</li>
+</ul>
+<p>#### Ordered list</p>
+<ol class="arabic simple">
+<li>ordered list
+in new line</li>
+<li>second item</li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li>nested unordered list</li>
+<li>second item
+with new line</li>
+</ul>
+</div></blockquote>
+<ol class="arabic simple" start="3">
+<li>original depth</li>
+</ol>
+<blockquote>
+<div><ol class="arabic simple">
+<li>nested ordered list
+with new line</li>
+<li>again</li>
+</ol>
+</div></blockquote>
+<ol class="arabic simple" start="4">
+<li>original depth again</li>
+</ol>
+<p>### Code Block</p>
+<p>Simple, indented code block</p>
+<blockquote>
+<div>pip install sphinx</div></blockquote>
+<p>Code block with triple backticks and language.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">a</span><span class="p">(</span><span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="bp">None</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Triple-tildes (<cite>~~~</cite>) are also available.</p>
+<dl class="docutils">
+<dt>~~~</dt>
+<dd><dl class="first last docutils">
+<dt>def a(n: int) -&gt; None:</dt>
+<dd><dl class="first last docutils">
+<dt>for i in range(n):</dt>
+<dd>print(i)</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>~~~</p>
+<p>Here is reST style code block.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="bp">True</span><span class="p">:</span>
+    <span class="k">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>## Extensions</p>
+<p>### Table (Markdown-Style)</p>
+<p>(cell-alignment is not supported currently)</p>
+<div class="line-block">
+<div class="line">Table Header 1 | Table Header 2 | Table Header 3 |</div>
+</div>
+<p><a href="#id1"><span class="problematic" id="id2">|----------------|</span></a>—————-<a href="#id3"><span class="problematic" id="id4">|----------------|</span></a>
+| normal         | <em>italic</em>       | <strong>bold</strong>       |
+| <cite>code</cite> | ~~deleted~~  | &lt;b&gt;inline-html&lt;/b&gt; |</p>
+<p>### Math</p>
+<p>This is <cite>$E = mc^2$</cite> inline math.</p>
+<p>The below is math-block (markdown-style).</p>
+<p><code class="docutils literal notranslate"><span class="pre">`math</span>
+<span class="pre">E</span> <span class="pre">=</span> <span class="pre">mc^2</span>
+<span class="pre">`</span></code></p>
+<p>The below is reST-style math-block.</p>
+<div class="math notranslate nohighlight">
+\[E = mc^2\]</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="master.html">azure-iot-hub-devicesdk documentation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="master.html">Documentation overview</a><ul>
+      <li>Previous: <a href="readme.html" title="previous chapter">&lt;no title&gt;</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Microsoft Corporation.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/example.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
