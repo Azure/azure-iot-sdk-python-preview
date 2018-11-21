@@ -10,6 +10,7 @@ activate authfac;
 authfac -> auth : factory method call
 activate auth;
 auth -> authfac : Authentication Provider Object;
+deactivate auth;
 authfac -> user: Authentication Provider Object;
 deactivate authfac;
 
