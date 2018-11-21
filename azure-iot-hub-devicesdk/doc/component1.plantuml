@@ -1,3 +1,6 @@
+
+<details>
+<summary>Summary from a separate page</summary>
 @startuml;
 actor User;
 participant "First Class" as A;
@@ -16,3 +19,4 @@ deactivate B;
 A -> User: Done;
 deactivate A;
 @enduml
+</details>
