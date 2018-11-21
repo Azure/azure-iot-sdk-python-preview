@@ -1,6 +1,10 @@
 ![Alt text](https://g.gravizo.com/source/svg?https://raw.githubusercontent.com/Azure/azure-iot-sdk-python-preview/diagrams/azure-iot-hub-devicesdk/doc/component1.plantuml)
 
 
+### Other
+![Alt text 2](https://g.gravizo.com/source/svg?https://raw.githubusercontent.com/Azure/azure-iot-sdk-python-preview/diagrams/azure-iot-hub-devicesdk/doc/component2.plantuml)
+
+
 ### Working in same file
 
 ![Inline diagram](https://g.gravizo.com/source/inline_diag2?https://raw.githubusercontent.com/Azure/azure-iot-sdk-python-preview/diagrams/azure-iot-hub-devicesdk/doc/component.md)
