@@ -3,9 +3,9 @@
 
 ### Working in same file
 
-![Inline diagram](https://g.gravizo.com/source/inline_diag2?https://raw.githubusercontent.com/Azure/azure-iot-sdk-python-preview/diagrams/azure-iot-hub-devicesdk/doc/component.md?1)
+![Inline diagram](https://g.gravizo.com/source/inline_diag2?https://raw.githubusercontent.com/Azure/azure-iot-sdk-python-preview/diagrams/azure-iot-hub-devicesdk/doc/component.md)
 <details> 
-<summary></summary>
+<summary>Sample sequence diagram</summary>
 inline_diag2
 @startuml;
 actor User;
