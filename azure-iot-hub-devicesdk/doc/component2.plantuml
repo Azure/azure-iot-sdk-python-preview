@@ -1,0 +1,13 @@
+<details> 
+<summary>Sample sequence diagram</summary>
+inline_diag2
+@startuml;
+actor user;
+participant "Authentication Provider" as auth;
+user -> auth: Create authentication provider from connection string;
+activate auth;
+auth -> user: Authentication Provider Object;
+deactivate auth;
+@enduml
+inline_diag2
+</details>
