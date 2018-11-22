@@ -32,3 +32,6 @@ client -> user : a device client
 @enduml
 inline_diag2
 </details>
+
+## Another YUML Not sure if sequence diagram is possible
+<img src="http://yuml.me/diagram/scruffy/class/[note: You can stick notes on diagrams too!{bg:cornsilk}],[Customer]<>1-orders 0..*>[Order], [Order]++*-*>[LineItem], [Order]-1>[DeliveryMethod], [Order]*-*>[Product], [Category]<->[Product], [DeliveryMethod]^[National], [DeliveryMethod]^[International]" >
