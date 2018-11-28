@@ -26,6 +26,7 @@ def send_payload():
 
 def start_sender():
     # This defines a timer that fires after 5 seconds
+    global event_sender
     event_sender = Timer(5.0, send_payload)
     event_sender.start()
 
