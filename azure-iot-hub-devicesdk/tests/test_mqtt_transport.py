@@ -7,10 +7,16 @@ import pytest
 import logging
 import six.moves.urllib as urllib
 from azure.iot.hub.devicesdk.message import Message
-from azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport import MQTTTransport
-from azure.iot.hub.devicesdk.auth.authentication_provider_factory import from_connection_string
+from azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport import MQTTTransport, MQTTProvider
+from azure.iot.hub.devicesdk.auth.authentication_provider_factory import (
+    from_connection_string,
+    from_x509,
+)
+import azure.iot.hub.devicesdk.auth.sk_authentication_provider as sk_auth
+import azure.iot.hub.devicesdk.auth.x509_authentication_provider as x509_auth
 from mock import MagicMock, patch
 from datetime import date
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -31,6 +37,7 @@ fake_message_id = "spell-1234"
 custom_property_value = "yes"
 custom_property_name = "dementor_alert"
 fake_topic = "devices/" + fake_device_id + "/messages/events/"
+
 encoded_fake_topic = (
     fake_topic
     + before_sys_key
@@ -51,8 +58,19 @@ def create_fake_message():
     return msg
 
 
+fake_cert_path = "/cert/path"
+fake_key_path = "/key/path"
+
+
+class BadAuthProvider:
+    def __init__(self):
+        self.device_id = fake_device_id
+        self.hostname = fake_hostname
+        self.module_id = None
+
+
 @pytest.fixture(scope="function")
-def authentication_provider():
+def sk_authentication_provider():
     connection_string = connection_string_format.format(
         fake_hostname, fake_device_id, fake_shared_access_key
     )
@@ -61,9 +79,15 @@ def authentication_provider():
 
 
 @pytest.fixture(scope="function")
-def transport(authentication_provider):
+def x509_authentication_provider():
+    auth_provider = from_x509(fake_device_id, fake_hostname, fake_cert_path, fake_key_path)
+    return auth_provider
+
+
+@pytest.fixture(scope="function")
+def transport(sk_authentication_provider):
     with patch("azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport.MQTTProvider"):
-        transport = MQTTTransport(authentication_provider)
+        transport = MQTTTransport(sk_authentication_provider)
     transport.on_transport_connected = MagicMock()
     transport.on_transport_disconnected = MagicMock()
     transport.on_event_sent = MagicMock()
@@ -87,10 +111,26 @@ def transport_module():
     transport.disconnect()
 
 
-def test_instantiation_creates_proper_transport(authentication_provider):
-    trans = MQTTTransport(authentication_provider)
-    assert trans._auth_provider == authentication_provider
-    assert trans._mqtt_provider is not None
+@patch.object(sk_auth, "SymmetricKeyAuthenticationProvider")
+def test_instantiation_creates_proper_transport_sk(sk_authentication_provider):
+    transport = MQTTTransport(sk_authentication_provider)
+    assert transport._auth_provider == sk_authentication_provider
+    assert transport._mqtt_provider is not None
+    assert isinstance(transport._mqtt_provider, MQTTProvider)
+
+
+def test_instantiation_creates_proper_transport_x509(x509_authentication_provider):
+    transport = MQTTTransport(x509_authentication_provider)
+    assert transport._auth_provider == x509_authentication_provider
+    assert transport._mqtt_provider is not None
+    assert isinstance(transport._mqtt_provider, MQTTProvider)
+
+
+def test_instantiation_raises_TypeError_on_invalid_auth_provider():
+    bad_auth_provider = BadAuthProvider()
+    with pytest.raises(TypeError):
+        transport = MQTTTransport(bad_auth_provider)
+        transport.connect()
 
 
 class TestConnect:
@@ -98,7 +138,7 @@ class TestConnect:
         mock_mqtt_provider = transport._mqtt_provider
         transport.connect()
         mock_mqtt_provider.connect.assert_called_once_with(
-            transport._auth_provider.get_current_sas_token()
+            transport._auth_provider.get_current_sas_token(), None
         )
         mock_mqtt_provider.on_mqtt_connected()
 
@@ -120,7 +160,7 @@ class TestConnect:
         mock_mqtt_provider.on_mqtt_connected()
 
         mock_mqtt_provider.connect.assert_called_once_with(
-            transport._auth_provider.get_current_sas_token()
+            transport._auth_provider.get_current_sas_token(), None
         )
         transport.on_transport_connected.assert_called_once_with("connected")
 
@@ -202,7 +242,7 @@ class TestSendEvent:
         transport.send_event(fake_msg)
 
         mock_mqtt_provider.connect.assert_called_once_with(
-            transport._auth_provider.get_current_sas_token()
+            transport._auth_provider.get_current_sas_token(), None
         )
         mock_mqtt_provider.publish.assert_called_once_with(encoded_fake_topic, fake_msg.data)
 
@@ -215,7 +255,7 @@ class TestSendEvent:
 
         # verify that we called connect
         mock_mqtt_provider.connect.assert_called_once_with(
-            transport._auth_provider.get_current_sas_token()
+            transport._auth_provider.get_current_sas_token(), None
         )
 
         # verify that we're not connected yet and verify that we havent't published yet
@@ -237,7 +277,7 @@ class TestSendEvent:
         # start connecting and verify that we've called into the provider
         transport.connect()
         mock_mqtt_provider.connect.assert_called_once_with(
-            transport._auth_provider.get_current_sas_token()
+            transport._auth_provider.get_current_sas_token(), None
         )
 
         # send an event

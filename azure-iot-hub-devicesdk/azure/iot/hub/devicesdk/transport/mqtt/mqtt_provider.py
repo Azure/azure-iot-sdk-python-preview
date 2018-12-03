@@ -96,12 +96,10 @@ class MQTTProvider(object):
 
         logger.info("Created MQTT provider, assigned callbacks")
 
-    def connect(self, password):
+    def _create_ssl_context(self, x509):
         """
-        This method connects the upper transport layer to the mqtt broker.
-        This method should be called as an entry point before sending any telemetry.
+        This method creates the SSLContext object used by Paho to authenticate the connection
         """
-        logger.info("connecting to mqtt broker")
 
         ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
         if self._ca_cert:
@@ -110,6 +108,21 @@ class MQTTProvider(object):
             ssl_context.load_default_certs()
         ssl_context.verify_mode = ssl.CERT_REQUIRED
         ssl_context.check_hostname = True
+
+        if x509 is not None:
+            logger.info("configuring SSL context with client-side certificate and key")
+            ssl_context.load_cert_chain(x509.cert_file, x509.key_file, x509.passphrase)
+        return ssl_context
+
+    def connect(self, password=None, x509=None):
+        """
+        This method connects the upper transport layer to the mqtt broker.
+        This method should be called as an entry point before sending any telemetry.
+        """
+        logger.info("connecting to mqtt broker")
+
+        ssl_context = self._create_ssl_context(x509)
+
         self._mqtt_client.tls_set_context(ssl_context)
         self._mqtt_client.tls_insecure_set(False)
         self._mqtt_client.username_pw_set(username=self._username, password=password)
@@ -117,12 +130,15 @@ class MQTTProvider(object):
         self._mqtt_client.connect(host=self._hostname, port=8883)
         self._mqtt_client.loop_start()
 
-    def reconnect(self, password):
+    def reconnect(self, password=None, x509_credentials=None):
         """
         This method reconnects the mqtt broker, possibly because of a password (sas) change
         Connect should have previously been called.
         """
         logger.info("reconnecting transport")
+
+        ssl_context = self._create_ssl_context(x509_credentials)
+        self._mqtt_client.tls_set_context(ssl_context)
         self._mqtt_client.username_pw_set(username=self._username, password=password)
         self._mqtt_client.reconnect()
 

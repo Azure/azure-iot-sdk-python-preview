@@ -155,14 +155,37 @@ class MQTTTransport(AbstractTransport):
 
         self._create_mqtt_provider()
 
+    def _get_credentials(self):
+        """
+        Gets credentials from the auth provider.
+        This is called when connecting or reconnecting.
+        """
+
+        password = None
+        x509_credentials = None
+
+        try:
+            logger.info("Trying to get SAS Token from Authentication Provider")
+            password = self._auth_provider.get_current_sas_token()
+        except AttributeError:
+            logger.info("No get_current_sas_token() method: using X509 authentication")
+            try:
+                x509_credentials = self._auth_provider.x509
+            except AttributeError:
+                logger.error("Neither a token-based nor an X509 Authentication Provider")
+                raise TypeError("AuthenticationProvider of unknown type")
+
+        return password, x509_credentials
+
     def _call_provider_connect(self, event_data):
         """
         Call into the provider to connect the transport.
         This is meant to be called by the state machine as part of a state transition
         """
         logger.info("Calling provider connect")
-        password = self._auth_provider.get_current_sas_token()
-        self._mqtt_provider.connect(password)
+
+        password, x509_credentials = self._get_credentials()
+        self._mqtt_provider.connect(password, x509_credentials)
 
         if hasattr(self._auth_provider, "token_update_callback"):
             self._auth_provider.token_update_callback = self._on_shared_access_string_updated
@@ -180,8 +203,8 @@ class MQTTTransport(AbstractTransport):
         """
         reconnect the transport
         """
-        password = self._auth_provider.get_current_sas_token()
-        self._mqtt_provider.reconnect(password)
+        password, x509_credentials = self._get_credentials()
+        self._mqtt_provider.reconnect(password, x509_credentials)
 
     def _on_provider_connect_complete(self):
         """

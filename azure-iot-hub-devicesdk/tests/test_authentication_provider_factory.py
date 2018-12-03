@@ -6,6 +6,7 @@
 from azure.iot.hub.devicesdk.auth.authentication_provider_factory import (
     from_connection_string,
     from_shared_access_signature,
+    from_x509,
 )
 from azure.iot.hub.devicesdk.auth.sk_authentication_provider import (
     SymmetricKeyAuthenticationProvider,
@@ -13,7 +14,10 @@ from azure.iot.hub.devicesdk.auth.sk_authentication_provider import (
 from azure.iot.hub.devicesdk.auth.sas_authentication_provider import (
     SharedAccessSignatureAuthenticationProvider,
 )
-
+from azure.iot.hub.devicesdk.auth.x509_authentication_provider import (
+    X509Credentials,
+    X509AuthenticationProvider,
+)
 
 connection_string_device_sk_format = "HostName={};DeviceId={};SharedAccessKey={}"
 connection_string_device_skn_format = (
@@ -34,6 +38,9 @@ module_id = "Divination"
 gateway_name = "EnchantedCeiling"
 signature = "IsolemnlySwearThatIamuUptoNogood"
 expiry = "1539043658"
+cert_file_path = "/cert/path"
+key_file_path = "/key/path"
+passphrase = "passphrase"
 
 
 sas_device_token_format = "SharedAccessSignature sr={}&sig={}&se={}"
@@ -99,3 +106,25 @@ def create_sas_token_string(is_module=False, is_key_name=False):
         return sas_device_skn_token_format.format(uri, signature, expiry, shared_access_key_name)
     else:
         return sas_device_token_format.format(uri, signature, expiry)
+
+
+def test_x509_auth_provider_created_correctly_without_passphrase():
+    auth_provider = from_x509(device_id, hostname, cert_file_path, key_file_path)
+    assert isinstance(auth_provider, X509AuthenticationProvider)
+    assert auth_provider.device_id == device_id
+    assert auth_provider.hostname == hostname
+    assert isinstance(auth_provider.x509, X509Credentials)
+    assert auth_provider.x509.cert_file == cert_file_path
+    assert auth_provider.x509.key_file == key_file_path
+    assert auth_provider.x509.passphrase is None
+
+
+def test_x509_auth_provider_created_correctly_with_passphrase():
+    auth_provider = from_x509(device_id, hostname, cert_file_path, key_file_path, passphrase)
+    assert isinstance(auth_provider, X509AuthenticationProvider)
+    assert auth_provider.device_id == device_id
+    assert auth_provider.hostname == hostname
+    assert isinstance(auth_provider.x509, X509Credentials)
+    assert auth_provider.x509.cert_file == cert_file_path
+    assert auth_provider.x509.key_file == key_file_path
+    assert auth_provider.x509.passphrase == passphrase

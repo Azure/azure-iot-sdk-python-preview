@@ -9,6 +9,7 @@ from azure.iot.hub.devicesdk.auth.authentication_provider_factory import (
     from_shared_access_signature,
     from_connection_string,
     from_environment,
+    from_x509,
 )
 
 # To understand authentication providers, it is beneficial to be familiar with the Azure IoT Hub Security model:
@@ -26,6 +27,15 @@ key_auth_provider = from_connection_string("IOTHUB_DEVICE_CONNECTION_STRING")
 
 # - Pre-defined environment variables (this is especially useful when running as an Azure IoT Edge module)
 env_auth_provider = from_environment()
+
+# - X509 Certificate Authentication Provider'
+cert_file = "../scripts/certificate.pem"
+key_file = "../scripts/key.pem"
+passphrase = "passphrase"
+
+x509_auth_provider = from_x509(
+    os.getenv("DEVICE_ID"), os.getenv("HOSTNAME"), cert_file, key_file, passphrase
+)
 
 # Once the authentication provider has been created, it can be passed to the client:
 device_client = DeviceClient.from_authentication_provider(key_auth_provider, "mqtt")
