@@ -6,6 +6,9 @@ import os
 import time
 from azure.iot.hub.devicesdk.device_client import DeviceClient
 from azure.iot.hub.devicesdk.auth.authentication_provider_factory import from_connection_string
+import logging
+
+logging.basicConfig(filename="example.log", level=logging.DEBUG)
 
 # The connection string for a device should never be stored in code. For the sake of simplicity we're using an environment variable here.
 conn_str = os.getenv("IOTHUB_DEVICE_CONNECTION_STRING")
