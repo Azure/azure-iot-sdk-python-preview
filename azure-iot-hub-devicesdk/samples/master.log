@@ -1,0 +1,107 @@
+INFO:azure.iot.hub.devicesdk.auth.sk_authentication_provider:Using Shared Key authentication for {IOTHubQuickStart.azure-devices.net, PythonDeluminator, None}
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_provider:creating mqtt client
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_provider:Created MQTT provider, assigned callbacks
+INFO:azure.iot.hub.devicesdk.internal_client:connecting to transport
+DEBUG:transitions.core:Initiating transition from state disconnected to state connecting...
+DEBUG:transitions.core:Exiting state disconnected. Processing callbacks...
+INFO:transitions.core:Exited state disconnected
+DEBUG:transitions.core:Entering state connecting. Processing callbacks...
+INFO:transitions.core:Entered state connecting
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:Calling provider connect
+INFO:azure.iot.hub.devicesdk.auth.base_renewable_token_authentication_provider:Generating new SAS token for (PythonDeluminator,None) that expires 3600 seconds in the future
+INFO:azure.iot.hub.devicesdk.auth.base_renewable_token_authentication_provider:Scheduling token update for (PythonDeluminator,None) for 3480 seconds in the future
+INFO:azure.iot.hub.devicesdk.auth.base_renewable_token_authentication_provider:_notify_token_updated: token_update_callback not set.  Doing nothing.
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_provider:connecting to mqtt broker
+DEBUG:transitions.core:Executed callback '_call_provider_connect' after transition.
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:Transition complete.  Trigger=_trig_connect, Dest=connecting, result=True, error=None
+DEBUG:transitions.core:Executed machine finalize callback '<function MQTTTransport.__init__.<locals>._on_transition_complete at 0x000001F706CFA0D0>'.
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_provider:connected with result code: 0
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:_on_provider_connect_complete
+DEBUG:transitions.core:Initiating transition from state connecting to state connected...
+DEBUG:transitions.core:Exiting state connecting. Processing callbacks...
+INFO:transitions.core:Exited state connecting
+DEBUG:transitions.core:Entering state connected. Processing callbacks...
+INFO:transitions.core:Entered state connected
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:checking event queue
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:done checking queue
+DEBUG:transitions.core:Executed callback '_publish_events_in_queue' after transition.
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:Transition complete.  Trigger=_trig_provider_connect_complete, Dest=connected, result=True, error=None
+DEBUG:transitions.core:Executed machine finalize callback '<function MQTTTransport.__init__.<locals>._on_transition_complete at 0x000001F706CFA0D0>'.
+INFO:azure.iot.hub.devicesdk.internal_client:emit_connection_status: connected
+DEBUG:transitions.core:Initiating transition from state connected to state None...
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:Adding event to queue for later sending
+DEBUG:transitions.core:Executed callback '_add_event_to_queue' before transition.
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:checking event queue
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:retrieved event from queue. publishing.
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_provider:sending
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:done checking queue
+DEBUG:transitions.core:Executed callback '_publish_events_in_queue' after transition.
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:Transition complete.  Trigger=_trig_send_event, Dest=None, result=True, error=None
+DEBUG:transitions.core:Executed machine finalize callback '<function MQTTTransport.__init__.<locals>._on_transition_complete at 0x000001F706CFA0D0>'.
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_provider:payload published for 1
+DEBUG:transitions.core:Initiating transition from state connected to state None...
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:Adding event to queue for later sending
+DEBUG:transitions.core:Executed callback '_add_event_to_queue' before transition.
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:checking event queue
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:retrieved event from queue. publishing.
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_provider:sending
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:done checking queue
+DEBUG:transitions.core:Executed callback '_publish_events_in_queue' after transition.
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:Transition complete.  Trigger=_trig_send_event, Dest=None, result=True, error=None
+DEBUG:transitions.core:Executed machine finalize callback '<function MQTTTransport.__init__.<locals>._on_transition_complete at 0x000001F706CFA0D0>'.
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_provider:payload published for 2
+DEBUG:transitions.core:Initiating transition from state connected to state None...
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:Adding event to queue for later sending
+DEBUG:transitions.core:Executed callback '_add_event_to_queue' before transition.
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:checking event queue
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:retrieved event from queue. publishing.
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_provider:sending
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:done checking queue
+DEBUG:transitions.core:Executed callback '_publish_events_in_queue' after transition.
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:Transition complete.  Trigger=_trig_send_event, Dest=None, result=True, error=None
+DEBUG:transitions.core:Executed machine finalize callback '<function MQTTTransport.__init__.<locals>._on_transition_complete at 0x000001F706CFA0D0>'.
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_provider:payload published for 3
+DEBUG:transitions.core:Initiating transition from state connected to state None...
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:Adding event to queue for later sending
+DEBUG:transitions.core:Executed callback '_add_event_to_queue' before transition.
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:checking event queue
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:retrieved event from queue. publishing.
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_provider:sending
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:done checking queue
+DEBUG:transitions.core:Executed callback '_publish_events_in_queue' after transition.
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:Transition complete.  Trigger=_trig_send_event, Dest=None, result=True, error=None
+DEBUG:transitions.core:Executed machine finalize callback '<function MQTTTransport.__init__.<locals>._on_transition_complete at 0x000001F706CFA0D0>'.
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_provider:payload published for 4
+DEBUG:transitions.core:Initiating transition from state connected to state None...
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:Adding event to queue for later sending
+DEBUG:transitions.core:Executed callback '_add_event_to_queue' before transition.
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:checking event queue
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:retrieved event from queue. publishing.
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_provider:sending
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:done checking queue
+DEBUG:transitions.core:Executed callback '_publish_events_in_queue' after transition.
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:Transition complete.  Trigger=_trig_send_event, Dest=None, result=True, error=None
+DEBUG:transitions.core:Executed machine finalize callback '<function MQTTTransport.__init__.<locals>._on_transition_complete at 0x000001F706CFA0D0>'.
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_provider:payload published for 5
+INFO:azure.iot.hub.devicesdk.internal_client:disconnecting from transport
+DEBUG:transitions.core:Initiating transition from state connected to state disconnecting...
+DEBUG:transitions.core:Exiting state connected. Processing callbacks...
+INFO:transitions.core:Exited state connected
+DEBUG:transitions.core:Entering state disconnecting. Processing callbacks...
+INFO:transitions.core:Entered state disconnecting
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:Calling provider disconnect
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_provider:disconnecting transport
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_provider:disconnected with result code: 0
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:_on_provider_disconnect_complete
+INFO:azure.iot.hub.devicesdk.internal_client:emit_connection_status: disconnected
+INFO:azure.iot.hub.devicesdk.auth.base_renewable_token_authentication_provider:Canceling token update timer for (PythonDeluminator,None)
+DEBUG:transitions.core:Executed callback '_call_provider_disconnect' after transition.
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:Transition complete.  Trigger=_trig_disconnect, Dest=disconnecting, result=True, error=None
+DEBUG:transitions.core:Executed machine finalize callback '<function MQTTTransport.__init__.<locals>._on_transition_complete at 0x000001F706CFA0D0>'.
+DEBUG:transitions.core:Initiating transition from state disconnecting to state disconnected...
+DEBUG:transitions.core:Exiting state disconnecting. Processing callbacks...
+INFO:transitions.core:Exited state disconnecting
+DEBUG:transitions.core:Entering state disconnected. Processing callbacks...
+INFO:transitions.core:Entered state disconnected
+INFO:azure.iot.hub.devicesdk.transport.mqtt.mqtt_transport:Transition complete.  Trigger=_trig_provider_disconnect_complete, Dest=disconnected, result=True, error=None
+DEBUG:transitions.core:Executed machine finalize callback '<function MQTTTransport.__init__.<locals>._on_transition_complete at 0x000001F706CFA0D0>'.
