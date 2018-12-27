@@ -309,6 +309,28 @@ class MQTTTransport(AbstractTransport):
 
         return topic
 
+    def _extract_properties(self, properties, message_received):
+        key_value_pairs = properties.split("&")
+
+        for entry in key_value_pairs:
+            pass
+            # pair = entry.split("=")
+            # key = urllib.pair[0]
+            # value = pair[1]
+
+    def _decode_properties(self, payload, topic):
+        message_received = Message(payload)
+
+        topic_parts = topic.split("/")
+
+        if len(topic_parts) > 4:
+            # module
+            message_received.input_name = topic_parts[5]
+            self._extract_properties(topic_parts[6], message_received)
+        else:
+            # device
+            self._extract_properties(topic_parts[4], message_received)
+
     def connect(self, callback=None):
         self._connect_callback = callback
         self._trig_connect()
