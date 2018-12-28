@@ -313,17 +313,31 @@ class MQTTTransport(AbstractTransport):
         key_value_pairs = properties.split("&")
 
         for entry in key_value_pairs:
-            pass
-            # pair = entry.split("=")
-            # key = urllib.pair[0]
-            # value = pair[1]
+            pair = entry.split("=")
+            key = urllib.parse.unquote_plus(pair[0])
+            value = urllib.parse.unquote_plus(pair[1])
 
-    def _decode_properties(self, payload, topic):
+            if key == "$.mid":
+                message_received.message_id = value
+            elif key == "$.cid":
+                message_received.correlation_id = value
+            elif key == "$.uid":
+                message_received.user_id = value
+            elif key == "$.to":
+                message_received.to = value
+            elif key == "$.ct":
+                message_received.content_type = value
+            elif key == "$.ce":
+                message_received.content_encoding = value
+            else:
+                message_received.custom_properties[key] = value
+
+    def _decode_topic(self, payload, topic):
         message_received = Message(payload)
 
         topic_parts = topic.split("/")
 
-        if len(topic_parts) > 4:
+        if len(topic_parts) > 6:
             # module
             message_received.input_name = topic_parts[5]
             self._extract_properties(topic_parts[6], message_received)
