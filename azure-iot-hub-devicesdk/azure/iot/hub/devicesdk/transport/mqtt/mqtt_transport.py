@@ -340,6 +340,7 @@ class MQTTTransport(AbstractTransport):
         )
 
     def connect(self, callback=None):
+        # If I call connect twice in a row quickly and the first connect operation hasn't finished, wouldn't its callback gets squashed?
         self._connect_callback = callback
         self._trig_connect()
 
@@ -421,6 +422,7 @@ def _extract_properties(properties, message_received):
             message_received.content_encoding = value
         else:
             message_received.custom_properties[key] = value
+        # TODO: Missing expiry here?
 
 
 def _encode_properties(message_to_send, topic):

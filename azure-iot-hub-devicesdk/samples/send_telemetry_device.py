@@ -15,7 +15,7 @@ conn_str = os.getenv("IOTHUB_DEVICE_CONNECTION_STRING")
 auth_provider = from_connection_string(conn_str)
 # For now, the SDK only supports MQTT as a protocol. the client object is used to interact with your Azure IoT hub.
 # It needs an Authentication Provider to secure the communication with the hub, using either tokens or x509 certificates
-device_client = DeviceClient.from_authentication_provider(auth_provider, "mqtt")
+device_client = DeviceClient.from_authentication_provider(auth_provider, "http")
 
 
 # The connection state callback allows us to detect when the client is connected and disconnected:

@@ -7,6 +7,7 @@ import logging
 from threading import Event
 from .transport.mqtt.mqtt_transport import MQTTTransport
 from .message import Message
+from .transport.http.http_transport import HTTPTransport
 
 logger = logging.getLogger(__name__)
 
@@ -166,6 +167,8 @@ class InternalClient(object):
         """
         if transport_name == "mqtt":
             transport = MQTTTransport(authentication_provider)
+        elif transport_name == "http":
+            transport = HTTPTransport(authentication_provider)
         else:
             raise NotImplementedError(
                 "No specific transport can be instantiated based on the choice."
