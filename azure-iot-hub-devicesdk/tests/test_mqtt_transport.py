@@ -196,7 +196,7 @@ class TestSendEvent:
         transport.send_event(fake_msg)
 
         mock_mqtt_provider.connect.assert_called_once_with(
-            transport._auth_provider.get_current_sas_token()
+            transport._auth_provider.get_current_sas_token(), None
         )
         mock_mqtt_provider.publish.assert_called_once_with(fake_topic, fake_msg.data)
 
@@ -228,7 +228,7 @@ class TestSendEvent:
         transport_module.send_event(fake_msg)
 
         mock_mqtt_provider.connect.assert_called_once_with(
-            transport_module._auth_provider.get_current_sas_token()
+            transport_module._auth_provider.get_current_sas_token(), None
         )
         mock_mqtt_provider.publish.assert_called_once_with(fake_output_topic, fake_msg.data)
 
