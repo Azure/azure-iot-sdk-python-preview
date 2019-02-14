@@ -33,6 +33,9 @@ class GenericClient(object):
         self.on_event_sent = None
         self.on_c2d_message = None
         self.on_input_message = None
+        self.on_unsubscribe_completed = None
+        # self.on_disable_input_message = None
+        # self.on_disable_c2d_message = None
 
     def _emit_connection_status(self):
         """
@@ -191,6 +194,25 @@ class GenericClientSync(GenericClient):
             raise ValueError("Feature names can be only among 'input' or 'c2d'")
 
         enable_complete.wait()
+
+    def disable_feature(self, feature_name):
+        disable_complete = Event()
+
+        def callback():
+            disable_complete.set()
+
+        if feature_name == "input":
+            self._transport.disable_input_messages(callback)
+        elif feature_name == "c2d":
+            self._transport.disable_c2d_messages(callback)
+        else:
+            logger.error("Feature name has not been defined.Feature names can be 'input' or 'c2d'")
+            raise ValueError("Feature names can be only among 'input' or 'c2d'")
+
+        disable_complete.wait()
+
+        if self.on_unsubscribe_completed:
+            self.on_unsubscribe_completed(feature_name)
 
 
 class DeviceClient(GenericClientSync):
