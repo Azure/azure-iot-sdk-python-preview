@@ -4,4 +4,7 @@ This library provides asynchronous clients for communicating with Azure IoT serv
 from an IoT device.
 """
 
+import azure.iot.device.iothub as iothub
 from azure.iot.device.iothub.aio import *
+
+__all__ = iothub.aio.__all__
