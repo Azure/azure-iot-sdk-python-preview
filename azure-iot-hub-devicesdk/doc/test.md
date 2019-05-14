@@ -25,3 +25,10 @@ client -> user : a device client
 @enduml
 inline_diag3
 </details>
+
+
+
+
+
+### Other
+![Alt text 2](https://g.gravizo.com/source/svg?https://raw.githubusercontent.com/Azure/azure-iot-sdk-python-preview/diagrams/azure-iot-hub-devicesdk/doc/test.plantuml)
