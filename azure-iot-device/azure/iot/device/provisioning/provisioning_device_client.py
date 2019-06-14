@@ -15,7 +15,7 @@ from .internal.polling_machine import PollingMachine
 logger = logging.getLogger(__name__)
 
 
-class X509ProvisioningDeviceClient(AbstractProvisioningDeviceClient):
+class ProvisioningDeviceClient(AbstractProvisioningDeviceClient):
     """
     Client which can be used to run the registration of a device with provisioning service
     using Symmetric Key authentication.
@@ -23,12 +23,12 @@ class X509ProvisioningDeviceClient(AbstractProvisioningDeviceClient):
 
     def __init__(self, provisioning_pipeline):
         """
-        Initializer for the Symmetric Key Provisioning Client.
+        Initializer for the Provisioning Client.
         NOTE : This initializer should not be called directly.
         Instead, the class method `create_from_security_client` should be used to create a client object.
         :param provisioning_pipeline: The protocol pipeline for provisioning. As of now this only supports MQTT.
         """
-        super(X509ProvisioningDeviceClient, self).__init__(provisioning_pipeline)
+        super(ProvisioningDeviceClient, self).__init__(provisioning_pipeline)
         self._polling_machine = PollingMachine(provisioning_pipeline)
 
     def register(self):
