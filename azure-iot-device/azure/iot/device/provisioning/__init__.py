@@ -5,13 +5,6 @@ human intervention, enabling customers to provision millions of devices in a sec
 
 """
 from .provisioning_device_client import ProvisioningDeviceClient
-from .security import SymmetricKeySecurityClient
-from .security import X509SecurityClient
 from .models import RegistrationResult
 
-__all__ = [
-    "ProvisioningDeviceClient",
-    "SymmetricKeySecurityClient",
-    "RegistrationResult",
-    "X509SecurityClient",
-]
+__all__ = ["ProvisioningDeviceClient", "RegistrationResult"]

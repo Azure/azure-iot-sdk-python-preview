@@ -25,7 +25,6 @@ class ProvisioningPipeline(object):
         Constructor for instantiating a pipeline
         :param security_client: The security client which stores credentials
         """
-        self._security_client = security_client
         # Event Handlers - Will be set by Client after instantiation of pipeline
         self.on_provisioning_pipeline_connected = None
         self.on_provisioning_pipeline_disconnected = None

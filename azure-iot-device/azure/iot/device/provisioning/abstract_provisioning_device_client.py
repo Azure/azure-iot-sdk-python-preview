@@ -88,10 +88,10 @@ class AbstractProvisioningDeviceClient(object):
         :param protocol_choice: The choice for the protocol to be used. This is optional and will default to protocol MQTT currently.
         :return: A ProvisioningDeviceClient which can register via Symmetric Key.
         """
-        if protocol_choice is not None:
-            protocol_name = protocol_choice.lower()
-        else:
+        if protocol_choice is None:
             protocol_name = "mqtt"
+        else:
+            protocol_name = protocol_choice.lower()
         if protocol_name == "mqtt":
             security_client = X509SecurityClient(provisioning_host, registration_id, id_scope, x509)
             mqtt_provisioning_pipeline = ProvisioningPipeline(security_client)
@@ -118,12 +118,12 @@ class AbstractProvisioningDeviceClient(object):
 
 
 def log_on_register_complete(result=None, error=None):
-    # This could be a failed/successful registration result from the HUB
+    # This could be a failed/successful registration result from DPS
     # or a error from polling machine. Response should be given appropriately
     if result is not None:
         if result.status == "assigned":
-            logger.info("Successfully registered with Hub")
+            logger.info("Successfully registered with Provisioning Service")
         else:  # There be other statuses
-            logger.error("Failed registering with Hub")
+            logger.error("Failed registering with Provisioning Service")
     if error is not None:  # This can only happen when the polling machine runs into error
         logger.info(error)

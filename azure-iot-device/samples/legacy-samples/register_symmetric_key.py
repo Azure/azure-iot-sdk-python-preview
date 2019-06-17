@@ -18,7 +18,10 @@ registration_id = os.getenv("PROVISIONING_REGISTRATION_ID")
 symmetric_key = os.getenv("PROVISIONING_SYMMETRIC_KEY")
 
 provisioning_device_client = ProvisioningDeviceClient.create_from_symmetric_key(
-    provisioning_host, registration_id, id_scope, symmetric_key
+    provisioning_host=provisioning_host,
+    registration_id=registration_id,
+    id_scope=id_scope,
+    symmetric_key=symmetric_key,
 )
 
 provisioning_device_client.register()
