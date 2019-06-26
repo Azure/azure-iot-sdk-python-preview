@@ -121,3 +121,4 @@ coverage/
 # Certificates
 *.pem
 demoCA/
+*.rnd
