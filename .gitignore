@@ -120,3 +120,4 @@ coverage/
 
 # Certificates
 *.pem
+demoCA/

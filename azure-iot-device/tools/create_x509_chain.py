@@ -4,8 +4,11 @@ import argparse
 import getpass
 
 
-def prepare_config():
-    with open("C:/OpenSSL-Win64/bin/openssl.cfg", "r") as openssl_config:
+def create_custom_config():
+    # This is very specific to installations in various system
+    openssl_path = os.getenv("OpenSSLDir")
+    config_path = openssl_path + "/bin/openssl.cfg"
+    with open(config_path, "r") as openssl_config:
         config = openssl_config.read()
     lines = config.splitlines()
     policy_loose_found = False
@@ -45,7 +48,7 @@ def prepare_config():
         local_file.write("\n".join(list_of_lines) + "\n")
 
 
-def create_certificate_chain(common_name):
+def create_certificate_chain(common_name, ca_password, intermediate_password, device_password):
     # Results of the below commands are not same when we are outisde demoCA
     # os.system("cd demoCA")
     os.system("type nul > demoCA/index.txt")
@@ -165,7 +168,7 @@ if __name__ == "__main__":
     # Create the directory demoCA as that is the configuration in most openssl installation
     os.system("mkdir demoCA")
 
-    prepare_config()
+    create_custom_config()
     if args.ca_password:
         ca_password = args.ca_password
     else:
@@ -179,4 +182,9 @@ if __name__ == "__main__":
     else:
         device_password = getpass.getpass("Enter pass phrase for device key: ")
 
-    create_certificate_chain(args.domain)
+    create_certificate_chain(
+        common_name=args.domain,
+        ca_password=ca_password,
+        intermediate_password=intermediate_password,
+        device_password=device_password,
+    )
