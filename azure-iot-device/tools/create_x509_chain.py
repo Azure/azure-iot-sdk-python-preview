@@ -94,7 +94,7 @@ def create_certificate_chain(common_name):
         "openssl ca -config demoCA/openssl.cnf -in demoCA/newcerts/intermediate_csr_cn.pem -out demoCA/newcerts/intermediate_cert_cn.pem -keyfile demoCA/private/ca_key.pem -cert demoCA/newcerts/ca_cert_cn.pem -passin pass:"
         + ca_password
         + " "
-        + "-extensions v3_ca -days 30 -notext -md sha256"
+        + "-extensions v3_ca -days 30 -notext -md sha256 -batch"
     )
     print("Done generating intermediate certificate")
 
@@ -118,7 +118,7 @@ def create_certificate_chain(common_name):
         "openssl ca -config demoCA/openssl.cnf -in demoCA/newcerts/device_csr_cn.pem -out demoCA/newcerts/device_cert_cn.pem -keyfile demoCA/private/intermediate_key.pem -cert demoCA/newcerts/intermediate_cert_cn.pem -passin pass:"
         + intermediate_password
         + " "
-        + "-extensions usr_cert -days 3 -notext -md sha256"
+        + "-extensions usr_cert -days 3 -notext -md sha256 -batch"
     )
     print("Done generating device certificate")
 
