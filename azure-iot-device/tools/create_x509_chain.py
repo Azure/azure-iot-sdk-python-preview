@@ -66,7 +66,10 @@ def create_certificate_chain(common_name):
 
     subject = "//C=US/CN=root" + common_name
     os.system(
-        "openssl req -config demoCA/openssl.cnf -key demoCA/private/ca_key.pem -passin pass:hogwarts -new -x509 -days 300 -sha256 -extensions v3_ca -out demoCA/newcerts/ca_cert_cn.pem -subj "
+        "openssl req -config demoCA/openssl.cnf -key demoCA/private/ca_key.pem -passin pass:"
+        + ca_password
+        + " "
+        + "-new -x509 -days 300 -sha256 -extensions v3_ca -out demoCA/newcerts/ca_cert_cn.pem -subj "
         + subject
     )
     print("Done generating root certificate")
@@ -79,13 +82,19 @@ def create_certificate_chain(common_name):
     print("Done generating intermediate key")
     subject = "//C=US/CN=inter" + common_name
     os.system(
-        "openssl req -config demoCA/openssl.cnf -key demoCA/private/intermediate_key.pem -passin pass:hogwartsi -new -sha256 -out demoCA/newcerts/intermediate_csr_cn.pem -subj "
+        "openssl req -config demoCA/openssl.cnf -key demoCA/private/intermediate_key.pem -passin pass:"
+        + intermediate_password
+        + " "
+        + "-new -sha256 -out demoCA/newcerts/intermediate_csr_cn.pem -subj "
         + subject
     )
 
     print("Done generating intermediate CSR")
     os.system(
-        "openssl ca -config demoCA/openssl.cnf -in demoCA/newcerts/intermediate_csr_cn.pem -out demoCA/newcerts/intermediate_cert_cn.pem -keyfile demoCA/private/ca_key.pem -cert demoCA/newcerts/ca_cert_cn.pem -passin pass:hogwarts -extensions v3_ca -days 30 -notext -md sha256"
+        "openssl ca -config demoCA/openssl.cnf -in demoCA/newcerts/intermediate_csr_cn.pem -out demoCA/newcerts/intermediate_cert_cn.pem -keyfile demoCA/private/ca_key.pem -cert demoCA/newcerts/ca_cert_cn.pem -passin pass:"
+        + ca_password
+        + " "
+        + "-extensions v3_ca -days 30 -notext -md sha256"
     )
     print("Done generating intermediate certificate")
 
@@ -98,12 +107,18 @@ def create_certificate_chain(common_name):
     print("Done generating device key")
     subject = "//C=US/CN=device" + common_name
     os.system(
-        "openssl req -config demoCA/openssl.cnf -new -sha256 -key demoCA/private/device_key.pem -passin pass:hogwartsd -out demoCA/newcerts/device_csr_cn.pem -subj "
+        "openssl req -config demoCA/openssl.cnf -new -sha256 -key demoCA/private/device_key.pem -passin pass:"
+        + device_password
+        + " "
+        + "-out demoCA/newcerts/device_csr_cn.pem -subj "
         + subject
     )
     print("Done generating device CSR")
     os.system(
-        "openssl ca -config demoCA/openssl.cnf -in demoCA/newcerts/device_csr_cn.pem -out demoCA/newcerts/device_cert_cn.pem -keyfile demoCA/private/intermediate_key.pem -cert demoCA/newcerts/intermediate_cert_cn.pem -passin pass:hogwartsi -extensions usr_cert -days 3 -notext -md sha256"
+        "openssl ca -config demoCA/openssl.cnf -in demoCA/newcerts/device_csr_cn.pem -out demoCA/newcerts/device_cert_cn.pem -keyfile demoCA/private/intermediate_key.pem -cert demoCA/newcerts/intermediate_cert_cn.pem -passin pass:"
+        + intermediate_password
+        + " "
+        + "-extensions usr_cert -days 3 -notext -md sha256"
     )
     print("Done generating device certificate")
 
