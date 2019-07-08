@@ -94,11 +94,9 @@ class HandleTwinOperationsStage(PipelineStage):
                 # TODO map error codes to correct exceptions
                 logger.error("Error {} received from twin operation".format(twin_op.status_code))
                 logger.error("response body: {}".format(twin_op.response_body))
-                original_op.error = errors.exception_from_status_code(
-                    status_code=twin_op.status_code,
-                    message="Twin operation returned status {}".format(twin_op.status_code),
+                original_op.error = Exception(
+                    "twin operation returned status {}".format(twin_op.status_code)
                 )
-                original_op.error.response_boxy = twin_op.response_body
 
         if isinstance(op, pipeline_ops_iothub.GetTwinOperation):
 

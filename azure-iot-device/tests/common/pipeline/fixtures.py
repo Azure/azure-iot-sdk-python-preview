@@ -79,6 +79,7 @@ def new_op(callback):
 
 @pytest.fixture
 def fake_pipeline_thread(mocker):
+    # BKTODO doc
     class mock_local(object):
         def __init__(self):
             self.in_pipeline_thread = True

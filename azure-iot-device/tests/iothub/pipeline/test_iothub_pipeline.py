@@ -93,7 +93,6 @@ class TestIoTHubPipelineInstantiation(object):
         expected_stage_order = [
             pipeline_stages_base.PipelineRootStage,
             pipeline_stages_iothub.UseAuthProviderStage,
-            pipeline_stages_base.RetryStage,
             pipeline_stages_iothub.HandleTwinOperationsStage,
             pipeline_stages_base.CoordinateRequestAndResponseStage,
             pipeline_stages_base.EnsureConnectionStage,

@@ -13,7 +13,6 @@ from . import pipeline_events_base
 from . import pipeline_ops_base
 from . import operation_flow
 from . import pipeline_thread
-from azure.iot.device.common import errors
 
 logger = logging.getLogger(__name__)
 

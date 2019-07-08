@@ -27,6 +27,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 # Make it look like we're always running inside pipeline threads
+# BKTODO: why here,  comment on autouse
 @pytest.fixture(autouse=True)
 def apply_fake_pipeline_thread(fake_pipeline_thread):
     pass
