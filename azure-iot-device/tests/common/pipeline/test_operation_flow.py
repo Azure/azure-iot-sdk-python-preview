@@ -6,6 +6,7 @@
 import logging
 import pytest
 from azure.iot.device.common.pipeline import (
+    pipeline_thread,
     pipeline_stages_base,
     pipeline_ops_base,
     pipeline_events_base,
@@ -24,6 +25,12 @@ from tests.common.pipeline.helpers import (
 )
 
 logging.basicConfig(level=logging.INFO)
+
+
+# Make it look like we're always running inside pipeline threads
+@pytest.fixture(autouse=True)
+def apply_fake_pipeline_thread(fake_pipeline_thread):
+    pass
 
 
 class MockPipelineStage(pipeline_stages_base.PipelineStage):

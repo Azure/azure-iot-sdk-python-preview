@@ -15,3 +15,4 @@ black; python_version >= '3.6'
 pre-commit
 janus; python_version >= '3.5'
 twine
+futures; python_version == '2.7'

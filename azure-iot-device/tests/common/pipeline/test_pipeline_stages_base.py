@@ -26,6 +26,13 @@ logging.basicConfig(level=logging.INFO)
 
 this_module = sys.modules[__name__]
 
+
+# Make it look like we're always running inside pipeline threads
+@pytest.fixture(autouse=True)
+def apply_fake_pipeline_thread(fake_pipeline_thread):
+    pass
+
+
 pipeline_stage_test.add_base_pipeline_stage_tests(
     cls=pipeline_stages_base.EnsureConnectionStage,
     module=this_module,

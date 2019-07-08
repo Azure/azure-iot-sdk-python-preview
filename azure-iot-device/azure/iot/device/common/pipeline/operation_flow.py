@@ -233,6 +233,7 @@ def complete_op(stage, op):
     try:
         op.callback(op)
     except Exception as e:
+
         _, e, _ = sys.exc_info()
         logger.error(
             msg="Unhandled error calling back inside {}.complete_op() after {} complete".format(

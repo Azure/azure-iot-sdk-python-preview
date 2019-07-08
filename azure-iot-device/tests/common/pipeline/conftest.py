@@ -14,4 +14,5 @@ from tests.common.pipeline.fixtures import (
     op3,
     finally_op,
     new_op,
+    fake_pipeline_thread,
 )

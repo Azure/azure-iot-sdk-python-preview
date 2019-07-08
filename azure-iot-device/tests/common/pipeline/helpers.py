@@ -6,6 +6,7 @@
 import inspect
 import pytest
 import functools
+from threading import Event
 from azure.iot.device.common.pipeline import (
     pipeline_events_base,
     pipeline_ops_base,
@@ -132,3 +133,31 @@ def get_arg_count(fn):
 def make_mock_op_or_event(cls):
     args = [None for i in (range(get_arg_count(cls.__init__) - 1))]
     return cls(*args)
+
+
+def add_mock_method_waiter(obj, method_name):
+    """
+    For mock methods, add "wait_for_xxx_to_be_called" and "wait_for_xxx_to_not_be_called"
+    helper functions on the object.  This is very handy for methods that get called by
+    another thread, when you want your test functions to wait until the other thread is
+    able to call the method without using a sleep call.
+    """
+    method_called = Event()
+
+    def signal_method_called(*args, **kwargs):
+        method_called.set()
+
+    def wait_for_method_to_be_called():
+        method_called.wait(0.01)
+        assert method_called.isSet()
+        method_called.clear()
+
+    def wait_for_method_to_not_be_called():
+        method_called.wait(0.01)
+        assert not method_called.isSet()
+
+    getattr(obj, method_name).side_effect = signal_method_called
+    setattr(obj, "wait_for_{}_to_be_called".format(method_name), wait_for_method_to_be_called)
+    setattr(
+        obj, "wait_for_{}_to_not_be_called".format(method_name), wait_for_method_to_not_be_called
+    )

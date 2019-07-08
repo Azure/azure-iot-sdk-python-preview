@@ -5,7 +5,11 @@
 # --------------------------------------------------------------------------
 import pytest
 from tests.common.pipeline import helpers
-from azure.iot.device.common.pipeline import pipeline_events_base, pipeline_ops_base
+from azure.iot.device.common.pipeline import (
+    pipeline_events_base,
+    pipeline_ops_base,
+    pipeline_thread,
+)
 
 
 @pytest.fixture
@@ -39,35 +43,44 @@ class FakeOperation(pipeline_ops_base.PipelineOperation):
 
 
 @pytest.fixture
-def op():
-    op = FakeOperation()
+def op(callback):
+    op = FakeOperation(callback=callback)
     op.name = "op"
     return op
 
 
 @pytest.fixture
-def op2():
-    op = FakeOperation()
+def op2(callback):
+    op = FakeOperation(callback=callback)
     op.name = "op2"
     return op
 
 
 @pytest.fixture
-def op3():
-    op = FakeOperation()
+def op3(callback):
+    op = FakeOperation(callback=callback)
     op.name = "op3"
     return op
 
 
 @pytest.fixture
-def finally_op():
-    op = FakeOperation()
+def finally_op(callback):
+    op = FakeOperation(callback=callback)
     op.name = "finally_op"
     return op
 
 
 @pytest.fixture
-def new_op():
-    op = FakeOperation()
+def new_op(callback):
+    op = FakeOperation(callback=callback)
     op.name = "new_op"
     return op
+
+
+@pytest.fixture
+def fake_pipeline_thread(mocker):
+    class mock_local(object):
+        def __init__(self):
+            self.in_pipeline_thread = True
+
+    mocker.patch.object(pipeline_thread, "get_thread_local_storage", mock_local)

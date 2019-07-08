@@ -4,4 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from tests.common.pipeline.fixtures import callback, fake_exception, fake_base_exception, event
+from tests.common.pipeline.fixtures import (
+    callback,
+    fake_exception,
+    fake_base_exception,
+    event,
+    fake_pipeline_thread,
+)

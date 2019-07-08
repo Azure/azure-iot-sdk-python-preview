@@ -13,6 +13,7 @@ from azure.iot.device.common.pipeline import (
     pipeline_events_mqtt,
     PipelineStage,
     operation_flow,
+    pipeline_thread,
 )
 from azure.iot.device.iothub.models import Message, MethodRequest
 from . import constant, pipeline_ops_iothub, pipeline_events_iothub, mqtt_topic_iothub
@@ -30,6 +31,7 @@ class IoTHubMQTTConverterStage(PipelineStage):
         super(IoTHubMQTTConverterStage, self).__init__()
         self.feature_to_topic = {}
 
+    @pipeline_thread.assert_pipeline_thread
     def _run_op(self, op):
 
         if isinstance(op, pipeline_ops_iothub.SetAuthProviderArgsOperation):
@@ -144,6 +146,7 @@ class IoTHubMQTTConverterStage(PipelineStage):
             constant.TWIN_PATCHES: (mqtt_topic_iothub.get_twin_patch_topic_for_subscribe()),
         }
 
+    @pipeline_thread.assert_pipeline_thread
     def _handle_pipeline_event(self, event):
         """
         Pipeline Event handler function to convert incoming MQTT messages into the appropriate IoTHub

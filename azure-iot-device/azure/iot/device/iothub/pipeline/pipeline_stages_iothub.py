@@ -6,7 +6,13 @@
 
 import json
 import logging
-from azure.iot.device.common.pipeline import pipeline_ops_base, PipelineStage, operation_flow
+from azure.iot.device.common.pipeline import (
+    pipeline_ops_base,
+    PipelineStage,
+    operation_flow,
+    pipeline_thread,
+)
+from azure.iot.device.common import errors
 from . import pipeline_ops_iothub
 from . import constant
 
@@ -27,6 +33,7 @@ class UseAuthProviderStage(PipelineStage):
     All other operations are passed down.
     """
 
+    @pipeline_thread.assert_pipeline_thread
     def _run_op(self, op):
         def pipeline_ops_done(completed_op):
             op.error = completed_op.error
@@ -78,6 +85,7 @@ class HandleTwinOperationsStage(PipelineStage):
     protocol-specific receive event into an IotResponseEvent event.
     """
 
+    @pipeline_thread.assert_pipeline_thread
     def _run_op(self, op):
         def map_twin_error(original_op, twin_op):
             if twin_op.error:
@@ -86,9 +94,11 @@ class HandleTwinOperationsStage(PipelineStage):
                 # TODO map error codes to correct exceptions
                 logger.error("Error {} received from twin operation".format(twin_op.status_code))
                 logger.error("response body: {}".format(twin_op.response_body))
-                original_op.error = Exception(
-                    "twin operation returned status {}".format(twin_op.status_code)
+                original_op.error = errors.exception_from_status_code(
+                    status_code=twin_op.status_code,
+                    message="Twin operation returned status {}".format(twin_op.status_code),
                 )
+                original_op.error.response_boxy = twin_op.response_body
 
         if isinstance(op, pipeline_ops_iothub.GetTwinOperation):
 

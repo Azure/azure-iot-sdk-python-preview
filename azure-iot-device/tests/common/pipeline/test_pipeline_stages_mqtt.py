@@ -25,6 +25,13 @@ from tests.common.pipeline import pipeline_stage_test
 
 logging.basicConfig(level=logging.INFO)
 
+
+# Make it look like we're always running inside pipeline threads
+@pytest.fixture(autouse=True)
+def apply_fake_pipeline_thread(fake_pipeline_thread):
+    pass
+
+
 this_module = sys.modules[__name__]
 
 fake_client_id = "__fake_client_id__"
@@ -152,7 +159,7 @@ def op_set_sas_token(callback):
 @pytest.fixture
 def op_set_client_certificate(callback):
     return pipeline_ops_base.SetClientAuthenticationCertificateOperation(
-        certificate=fake_certificate
+        certificate=fake_certificate, callback=callback
     )
 
 

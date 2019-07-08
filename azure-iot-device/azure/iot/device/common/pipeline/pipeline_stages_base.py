@@ -12,6 +12,8 @@ from six.moves import queue
 from . import pipeline_events_base
 from . import pipeline_ops_base
 from . import operation_flow
+from . import pipeline_thread
+from azure.iot.device.common import errors
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +77,7 @@ class PipelineStage(object):
         self.previous = None
         self.pipeline_root = None
 
+    @pipeline_thread.assert_pipeline_thread
     def run_op(self, op):
         """
         Run the given operation.  This is the public function that outside callers would call to run an
@@ -111,6 +114,7 @@ class PipelineStage(object):
         """
         pass
 
+    @pipeline_thread.assert_pipeline_thread
     def handle_pipeline_event(self, event):
         """
         Handle a pipeline event that arrives from the stage below this stage.  Derived
@@ -128,6 +132,7 @@ class PipelineStage(object):
             )
             self.pipeline_root.unhandled_error_handler(e)
 
+    @pipeline_thread.assert_pipeline_thread
     def _handle_pipeline_event(self, event):
         """
         Handle a pipeline event that arrives from the stage below this stage.  This
@@ -138,6 +143,7 @@ class PipelineStage(object):
         """
         operation_flow.pass_event_to_previous_stage(self, event)
 
+    @pipeline_thread.assert_pipeline_thread
     def on_connected(self):
         """
         Called by lower layers when the protocol client connects
@@ -145,6 +151,7 @@ class PipelineStage(object):
         if self.previous:
             self.previous.on_connected()
 
+    @pipeline_thread.assert_pipeline_thread
     def on_disconnected(self):
         """
         Called by lower layers when the protocol client disconnects
@@ -170,6 +177,11 @@ class PipelineRootStage(PipelineStage):
         super(PipelineRootStage, self).__init__()
         self.on_pipeline_event = None
 
+    def run_op(self, op):
+        op.callback = pipeline_thread.invoke_on_callback_thread_nowait(op.callback)
+        pipeline_thread.invoke_on_pipeline_thread(super(PipelineRootStage, self).run_op)(op)
+
+    @pipeline_thread.assert_pipeline_thread
     def _run_op(self, op):
         """
         run the operation.  At the root, the only thing to do is to pass the operation
@@ -177,6 +189,7 @@ class PipelineRootStage(PipelineStage):
 
         :param PipelineOperation op: Operation to run.
         """
+        op.callback = pipeline_thread.invoke_on_callback_thread_nowait(op.callback)
         operation_flow.pass_op_to_next_stage(self, op)
 
     def append_stage(self, new_next_stage):
@@ -196,6 +209,7 @@ class PipelineRootStage(PipelineStage):
         new_next_stage.pipeline_root = self
         return self
 
+    @pipeline_thread.assert_pipeline_thread
     def unhandled_error_handler(self, error):
         """
         Handler for errors that happen which cannot be tied to a specific operation.
@@ -206,6 +220,7 @@ class PipelineRootStage(PipelineStage):
         # TODO: if there's an error in the app handler, print it and exit
         pass
 
+    @pipeline_thread.assert_pipeline_thread
     def _handle_pipeline_event(self, event):
         """
         Override of the PipelineEvent handler.  Because this is the root of the pipeline,
@@ -241,6 +256,7 @@ class EnsureConnectionStage(PipelineStage):
         self.queue = queue.Queue()
         self.blocked = False
 
+    @pipeline_thread.assert_pipeline_thread
     def _run_op(self, op):
         # If this stage is currently blocked (because we're waiting for a connection
         # to complete, we queue up all operations until after the connect completes.
@@ -290,6 +306,7 @@ class EnsureConnectionStage(PipelineStage):
         else:
             operation_flow.pass_op_to_next_stage(self, op)
 
+    @pipeline_thread.assert_pipeline_thread
     def _block(self, op):
         """
         block this stage while we're waiting for the connection to complete.
@@ -297,6 +314,7 @@ class EnsureConnectionStage(PipelineStage):
         logger.info("{}({}): enabling block".format(self.name, op.name))
         self.blocked = True
 
+    @pipeline_thread.assert_pipeline_thread
     def _unblock(self, op, error):
         """
         Unblock this stage after the connection is complete.  This also means
@@ -329,6 +347,7 @@ class EnsureConnectionStage(PipelineStage):
                 )
                 self.run_op(op_to_release)
 
+    @pipeline_thread.assert_pipeline_thread
     def _do_connect(self, op):
         """
         Start connecting the protocol client in response to some operation (which may or may not be a Connect operation)
@@ -343,6 +362,7 @@ class EnsureConnectionStage(PipelineStage):
             self.queue.put_nowait(op)
 
         # function that gets called after we're connected.
+        @pipeline_thread.assert_pipeline_thread
         def on_connected(op_connect):
             logger.info("{}({}): connection is complete".format(self.name, op.name))
             # if we're connecting because some layer above us asked us to connect, we complete that operation
@@ -361,10 +381,12 @@ class EnsureConnectionStage(PipelineStage):
             self, pipeline_ops_base.ConnectOperation(callback=on_connected)
         )
 
+    @pipeline_thread.assert_pipeline_thread
     def on_connected(self):
         self.connected = True
         PipelineStage.on_connected(self)
 
+    @pipeline_thread.assert_pipeline_thread
     def on_disconnected(self):
         self.connected = False
         PipelineStage.on_disconnected(self)
@@ -381,6 +403,7 @@ class CoordinateRequestAndResponseStage(PipelineStage):
         super(CoordinateRequestAndResponseStage, self).__init__()
         self.pending_responses = {}
 
+    @pipeline_thread.assert_pipeline_thread
     def _run_op(self, op):
         if isinstance(op, pipeline_ops_base.SendIotRequestAndWaitForResponseOperation):
             # Convert SendIotRequestAndWaitForResponseOperation operation into a SendIotRequestOperation operation
@@ -390,6 +413,7 @@ class CoordinateRequestAndResponseStage(PipelineStage):
 
             request_id = str(uuid.uuid4())
 
+            @pipeline_thread.assert_pipeline_thread
             def on_send_request_done(send_request_op):
                 logger.info(
                     "{}({}): Finished sending {} request to {} resource {}".format(
@@ -433,6 +457,7 @@ class CoordinateRequestAndResponseStage(PipelineStage):
         else:
             operation_flow.pass_op_to_next_stage(self, op)
 
+    @pipeline_thread.assert_pipeline_thread
     def _handle_pipeline_event(self, event):
         if isinstance(event, pipeline_events_base.IotResponseEvent):
             # match IotResponseEvent events to the saved dictionary of SendIotRequestAndWaitForResponseOperation
@@ -468,3 +493,13 @@ class CoordinateRequestAndResponseStage(PipelineStage):
                 )
         else:
             operation_flow.pass_event_to_previous_stage(self, event)
+
+
+class RetryStage(PipelineStage):
+    @pipeline_thread.assert_pipeline_thread
+    def _run_op(self, op):
+        op.original_callback = op.callback
+        operation_flow.pass_op_to_next_stage(self, op)
+
+    def _handle_error(self, op):
+        pass

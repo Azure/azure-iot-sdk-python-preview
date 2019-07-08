@@ -908,7 +908,8 @@ class TestPublish(object):
         "qos",
         [pytest.param(0, id="QoS 0"), pytest.param(1, id="QoS 1"), pytest.param(2, id="QoS 2")],
     )
-    def test_calls_paho_publish(self, mocker, mock_mqtt_client, client_operator, qos):
+    def test_calls_paho_publish(self, mocker, mock_mqtt_client, client_operator, qos, message_info):
+        mock_mqtt_client.publish.return_value = message_info
         client_operator.publish(topic=fake_topic, payload=fake_payload, qos=qos)
 
         assert mock_mqtt_client.publish.call_count == 1
