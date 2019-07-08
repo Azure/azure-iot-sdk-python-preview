@@ -9,6 +9,7 @@ import logging
 import ssl
 import threading
 import traceback
+from . import errors
 
 logger = logging.getLogger(__name__)
 
@@ -196,6 +197,8 @@ class MQTTClientOperator(object):
         """
         logger.info("subscribing to {} with qos {}".format(topic, qos))
         (result, mid) = self._mqtt_client.subscribe(topic, qos=qos)
+        if result != mqtt.MQTT_ERR_SUCCESS:
+            raise errors.ProtocolClientError(mqtt.error_string(result))
         self._op_manager.establish_operation(mid, callback)
 
     def unsubscribe(self, topic, callback=None):
@@ -209,6 +212,8 @@ class MQTTClientOperator(object):
         """
         logger.info("unsubscribing from {}".format(topic))
         (result, mid) = self._mqtt_client.unsubscribe(topic)
+        if result != mqtt.MQTT_ERR_SUCCESS:
+            raise errors.ProtocolClientError(mqtt.error_string(result))
         self._op_manager.establish_operation(mid, callback)
 
     def publish(self, topic, payload, qos=1, callback=None):
@@ -227,6 +232,8 @@ class MQTTClientOperator(object):
         """
         logger.info("sending")
         message_info = self._mqtt_client.publish(topic=topic, payload=payload, qos=qos)
+        if message_info.rc != mqtt.MQTT_ERR_SUCCESS:
+            raise errors.ProtocolClientError(mqtt.error_string(message_info.rc))
         self._op_manager.establish_operation(message_info.mid, callback)
 
 
