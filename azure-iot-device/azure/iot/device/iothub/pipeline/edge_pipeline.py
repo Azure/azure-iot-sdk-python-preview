@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 
 import logging
+from azure.iot.device.common.pipeline import pipeline_stages_base, pipeline_ops_base
 
 logger = logging.getLogger(__name__)
 
@@ -15,4 +16,5 @@ class EdgePipeline(object):
     """
 
     def __init__(self, auth_provider):
-        pass
+
+        self._pipeline = pipeline_stages_base.PipelineRootStage()
