@@ -32,7 +32,10 @@ class HTTPTransport(object):
         Creates an SSL context for use with the HTTP Client
         """
         ssl_context = ssl.SSLContext(protocol=ssl.PROTOCOL_TLSv1_2)
-        ssl_context.load_verify_locations(cadata=self._ca_cert)
+        if self._ca_cert:
+            ssl_context.load_verify_locations(cadata=self._ca_cert)
+        else:
+            ssl_context.load_default_certs()
         ssl_context.verify_mode = ssl.CERT_REQUIRED
         ssl_context.check_hostname = True
         return ssl_context
