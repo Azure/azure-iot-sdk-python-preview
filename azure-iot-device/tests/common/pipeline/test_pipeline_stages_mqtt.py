@@ -114,8 +114,14 @@ def op_set_connection_args(callback):
         username=fake_username,
         ca_cert=fake_ca_cert,
         client_cert=fake_certificate,
+        sas_token=fake_sas_token,
         callback=callback,
     )
+
+
+@pytest.fixture
+def op_connect(callback):
+    return pipeline_ops_base.ConnectOperation(callback=callback)
 
 
 @pytest.mark.describe(
@@ -128,7 +134,7 @@ class TestMQTTProviderRunOpWithSetConnectionArgs(object):
         assert transport.call_count == 1
 
     @pytest.mark.it(
-        "Initializes the MQTTTransport object with the passed client_id, hostname, username, and ca_cert"
+        "Initializes the MQTTTransport object with the passed client_id, hostname, username, ca_cert and x509_cert"
     )
     def test_passes_right_params(self, stage, transport, mocker, op_set_connection_args):
         stage.run_op(op_set_connection_args)
@@ -277,50 +283,124 @@ def transport_function_throws_base_exception(params, stage, mocker, fake_base_ex
     )
 
 
-@pytest.mark.parametrize("params", connection_ops + pubsub_ops)
-@pytest.mark.describe(
-    "MQTTTransportStage - .run_op() -- called with op that maps directly to transport calls"
-)
-class TestMQTTProviderBasicFunctionality(object):
-    @pytest.mark.it("Calls the appropriate function on the transport")
-    def test_calls_transport_function(self, stage, create_transport, params, op):
-        stage.run_op(op)
-        assert getattr(stage.transport, params["transport_function"]).call_count == 1
+# @pytest.mark.parametrize("params", connection_ops + pubsub_ops)
+# @pytest.mark.describe(
+#     "MQTTTransportStage - .run_op() -- called with op that maps directly to transport calls"
+# )
+# class TestMQTTProviderBasicFunctionality(object):
+#     @pytest.mark.it("Calls the appropriate function on the transport")
+#     def test_calls_transport_function(self, stage, create_transport, params, op):
+#         stage.run_op(op)
+#         assert getattr(stage.transport, params["transport_function"]).call_count == 1
 
-    @pytest.mark.it("Passes the correct args to the transport function")
-    def test_passes_correct_args_to_transport_function(self, stage, create_transport, params, op):
-        stage.run_op(op)
-        args = getattr(stage.transport, params["transport_function"]).call_args
-        for name in params["transport_kwargs"]:
-            assert args[1][name] == params["transport_kwargs"][name]
+#     @pytest.mark.it("Passes the correct args to the transport function")
+#     def test_passes_correct_args_to_transport_function(self, stage, create_transport, params, op):
+#         stage.run_op(op)
+#         args = getattr(stage.transport, params["transport_function"]).call_args
+#         for name in params["transport_kwargs"]:
+#             assert args[1][name] == params["transport_kwargs"][name]
 
-    @pytest.mark.it("Returns success after the transport completes the operation")
-    def test_succeeds(self, stage, create_transport, params, op, transport_function_succeeds):
-        op.callback.reset_mock()
-        stage.run_op(op)
-        assert_callback_succeeded(op=op)
+#     @pytest.mark.it("Returns success after the transport completes the operation")
+#     def test_succeeds(self, stage, create_transport, params, op, transport_function_succeeds):
+#         op.callback.reset_mock()
+#         stage.run_op(op)
+#         assert_callback_succeeded(op=op)
 
-    @pytest.mark.it("Returns failure if there is an Exception in the transport function")
-    def test_transport_function_throws_exception(
-        self,
-        stage,
-        create_transport,
-        params,
-        fake_exception,
-        op,
-        transport_function_throws_exception,
+#     @pytest.mark.it("Returns failure if there is an Exception in the transport function")
+#     def test_transport_function_throws_exception(
+#         self,
+#         stage,
+#         create_transport,
+#         params,
+#         fake_exception,
+#         op,
+#         transport_function_throws_exception,
+#     ):
+#         op.callback.reset_mock()
+#         stage.run_op(op)
+#         assert_callback_failed(op=op, error=fake_exception)
+
+#     @pytest.mark.it("Allows any BaseException raised by the transport function to propagate")
+#     def test_transport_function_throws_base_exception(
+#         self, stage, create_transport, params, op, transport_function_throws_base_exception
+#     ):
+#         op.callback.reset_mock()
+#         with pytest.raises(UnhandledException):
+#             stage.run_op(op)
+
+
+@pytest.mark.describe("MQTTTransportStage - .run_op() -- called with ConnectOperation")
+class TestMQTTProviderRunOpWithConnect(object):
+    @pytest.mark.it("Sets the ConnectOperation as the pending connection operation")
+    def test_sets_pending_operation(self, stage, create_transport, op_connect):
+        stage.run_op(op_connect)
+        assert stage._pending_connection_op is op_connect
+
+    @pytest.mark.it("Cancels any already pending connection operation")
+    @pytest.mark.parametrize(
+        "pending_connection_op",
+        [
+            pytest.param(pipeline_ops_base.ConnectOperation(), id="Pending ConnectOperation"),
+            pytest.param(pipeline_ops_base.ReconnectOperation(), id="Pending ReconnectOperation"),
+            pytest.param(pipeline_ops_base.DisconnectOperation(), id="Pending DisconnectOperation"),
+        ],
+    )
+    def test_pending_operation_cancelled(
+        self, mocker, stage, create_transport, op_connect, pending_connection_op
     ):
-        op.callback.reset_mock()
-        stage.run_op(op)
-        assert_callback_failed(op=op, error=fake_exception)
+        pending_connection_op.callback = mocker.MagicMock()
+        stage._pending_connection_op = pending_connection_op
+        stage.run_op(op_connect)
 
-    @pytest.mark.it("Allows any BaseException raised by the transport function to propagate")
-    def test_transport_function_throws_base_exception(
-        self, stage, create_transport, params, op, transport_function_throws_base_exception
+        # Callback has been completed, with a PipelineError set indicating early cancellation
+        assert pending_connection_op.callback.call_count == 1
+        assert isinstance(pending_connection_op.error, errors.PipelineError)
+
+        # New operation is now the pending operation
+        assert stage._pending_connection_op is op_connect
+
+    @pytest.mark.it("Does an MQTT connect via the MQTTTransport")
+    def test_mqtt_connect(self, mocker, stage, create_transport, op_connect):
+        stage.run_op(op_connect)
+        assert stage.transport.connect.call_count == 1
+        assert stage.transport.connect.call_args == mocker.call(password=stage.sas_token)
+
+    @pytest.mark.it(
+        "Sets the pending connection operation to None if there is a failure sending connect in the MQTTTransport"
+    )
+    def test_clears_pending_operation_on_failure(
+        self, mocker, stage, create_transport, op_connect, fake_exception
     ):
-        op.callback.reset_mock()
-        with pytest.raises(UnhandledException):
-            stage.run_op(op)
+        stage.transport.connect = mocker.MagicMock(side_effect=fake_exception)
+        stage.run_op(op_connect)
+        assert stage._pending_connection_op is None
+
+    # @pytest.mark.it("")
+
+    # @pytest.mark.it("Returns failure if there is an Exception in the transport function")
+    # def test_transport_function_throws_exception(
+    #     self,
+    #     stage,
+    #     create_transport,
+    #     fake_exception,
+    #     op,
+    #     transport_function_throws_exception,
+    # ):
+    #     op.callback.reset_mock()
+    #     stage.run_op(op)
+    #     assert_callback_failed(op=op, error=fake_exception)
+
+    # @pytest.mark.it("Allows any BaseException raised by the transport function to propagate")
+    # def test_transport_function_throws_base_exception(
+    #     self, stage, create_transport, params, op, transport_function_throws_base_exception
+    # ):
+    #     op.callback.reset_mock()
+    #     with pytest.raises(UnhandledException):
+    #         stage.run_op(op)
+
+
+# ~~~~~ EVERYTHING BEYOND THIS POINT IS OK ~~~~~~~~
+# ~~~~~ EXCEPT MAYBE SOME NAMES OF REQUIREMENTS ~~~~~~
 
 
 @pytest.mark.describe("MQTTTransportStage - EVENT: MQTT message received")
