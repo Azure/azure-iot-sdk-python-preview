@@ -96,6 +96,8 @@ class PipelineStage(object):
         try:
             self._execute_op(op)
         except Exception as e:
+            # This path is ONLY for unexpected errors. Expected errors should cause a fail completion
+            # within ._execute_op()
             logger.error(msg="Unexpected error in {}._execute_op() call".format(self), exc_info=e)
             operation_flow.complete_op(stage=self, op=op, error=e)
 
