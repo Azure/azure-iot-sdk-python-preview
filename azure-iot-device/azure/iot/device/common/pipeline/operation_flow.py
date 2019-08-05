@@ -100,6 +100,11 @@ def complete_op(stage, op, error=None):
     (such as a try/except wrapper) which are strongly advised.
     """
     if error:
+        if op.error:
+            # This shouldn't happen. If it does, something is wrong.
+            # You should EITHER set the error on the op, and not pass the error as param,
+            # OR only pass the error as a param.
+            logger.warning("Ovewriting {} error with {} error".format(op.error, error))
         op.error = error
 
     logger.info(

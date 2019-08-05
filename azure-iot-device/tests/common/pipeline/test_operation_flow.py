@@ -100,18 +100,40 @@ class TestContinueOp(object):
 
 @pytest.mark.describe("complete_op()")
 class TestCompleteOp(object):
-    @pytest.mark.it("Calls the op callback on success")
+    @pytest.mark.it("Calls the op callback for a successful op")
     def test_calls_callback_on_success(self, stage, op, callback):
         op.callback = callback
         complete_op(stage, op)
         assert_callback_succeeded(op)
 
-    @pytest.mark.it("Calls the op callback on failure")
+    @pytest.mark.it("Calls the op callback for a failed op")
     def test_calls_callback_on_error(self, stage, op, callback, fake_exception):
         op.error = fake_exception
         op.callback = callback
         complete_op(stage, op)
         assert_callback_failed(op=op, error=fake_exception)
+
+    @pytest.mark.it("Sets the error in an op, if provided")
+    def test_sets_error(self, stage, op, callback, fake_exception):
+        op.callback = callback
+        complete_op(stage, op, fake_exception)
+
+        assert_callback_failed(op=op, error=fake_exception)
+        assert op.error is fake_exception
+
+    @pytest.mark.it("Overrides the error in an op, if an error is provided")
+    def test_overwrites_error(self, stage, op, callback, fake_exception):
+        """NOTE: THIS IS NOT A TYPICAL USE CASE. IT SHOULDN'T HAPPEN.
+        But it theoretically COULD, and we want to verify that it works this way
+        IF it were to be called like this
+        """
+        op.callback = callback
+        op.error = ValueError()
+        assert op.error is not fake_exception
+
+        complete_op(stage, op, fake_exception)
+        assert_callback_failed(op=op, error=fake_exception)
+        assert op.error is fake_exception
 
     @pytest.mark.it(
         "Handles Exceptions raised in operation callback and passes them to the unhandled error handler"
