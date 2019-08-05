@@ -92,13 +92,16 @@ def pass_op_to_next_stage(stage, op):
 
 
 @pipeline_thread.runs_on_pipeline_thread
-def complete_op(stage, op):
+def complete_op(stage, op, error=None):
     """
     Helper function to complete an operation by calling its callback function thus
     returning the result of the operation back up the pipeline.  This is perferred to
     calling the operation's callback directly as it provides several layers of protection
     (such as a try/except wrapper) which are strongly advised.
     """
+    if error:
+        op.error = error
+
     logger.info(
         "{}({}): completing {} error".format(stage.name, op.name, "with" if op.error else "without")
     )

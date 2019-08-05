@@ -96,9 +96,8 @@ class PipelineStage(object):
         try:
             self._execute_op(op)
         except Exception as e:
-            logger.error(msg="Error in {}._execute_op() call".format(self), exc_info=e)
-            op.error = e
-            operation_flow.complete_op(self, op)
+            logger.error(msg="Unexpected error in {}._execute_op() call".format(self), exc_info=e)
+            operation_flow.complete_op(stage=self, op=op, error=e)
 
     @abc.abstractmethod
     def _execute_op(self, op):
@@ -322,8 +321,7 @@ class EnsureConnectionStage(PipelineStage):
                         self.name, op.name, op_to_release.name
                     )
                 )
-                op_to_release.error = error
-                operation_flow.complete_op(self, op_to_release)
+                operation_flow.complete_op(stage=self, op=op_to_release, error=error)
             else:
                 # when we release, go back through this stage again to make sure requirements are _really_ satisfied.
                 # this also pre-maturely completes ops that might now be satisfied.
@@ -356,8 +354,7 @@ class EnsureConnectionStage(PipelineStage):
             # if we're connecting because some layer above us asked us to connect, we complete that operation
             # once the connection is established.
             if isinstance(op, pipeline_ops_base.ConnectOperation):
-                op.error = op_connect.error
-                operation_flow.complete_op(self, op)
+                operation_flow.complete_op(stage=self, op=op, error=op_connect.error)
             # and, no matter what, we always unblock the stage when we're done connecting.
             self._unblock(op=op, error=op_connect.error)
 

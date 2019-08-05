@@ -87,7 +87,7 @@ class MQTTTransportStage(PipelineStage):
                 self.transport.connect(password=self.sas_token)
             except Exception as e:
                 self._active_connect_op = None
-                raise e
+                operation_flow.complete_op(stage=self, op=op, error=e)
 
         elif isinstance(op, pipeline_ops_base.ReconnectOperation):
             logger.info("{}({}): reconnecting".format(self.name, op.name))
@@ -99,7 +99,7 @@ class MQTTTransportStage(PipelineStage):
                 self.transport.reconnect(password=self.sas_token)
             except Exception as e:
                 self._active_connect_op = None
-                raise e
+                operation_flow.complete_op(stage=self, op=op, error=e)
 
         elif isinstance(op, pipeline_ops_base.DisconnectOperation):
             logger.info("{}({}): disconnecting".format(self.name, op.name))
@@ -110,7 +110,7 @@ class MQTTTransportStage(PipelineStage):
                 self.transport.disconnect()
             except Exception as e:
                 self._active_disconnect_op = None
-                raise e
+                operation_flow.complete_op(stage=self, op=op, error=e)
 
         elif isinstance(op, pipeline_ops_mqtt.MQTTPublishOperation):
             logger.info("{}({}): publishing on {}".format(self.name, op.name, op.topic))
@@ -184,8 +184,7 @@ class MQTTTransportStage(PipelineStage):
             logger.info("{}: failing connect op".format(self.name))
             op = self._active_connect_op
             self._active_connect_op = None
-            op.error = cause
-            operation_flow.complete_op(stage=self, op=op)
+            operation_flow.complete_op(stage=self, op=op, error=cause)
         else:
             logger.warning("{}: Connection failure was unexpected".format(self.name))
             unhandled_exceptions.exception_caught_in_background_thread(cause)
@@ -213,8 +212,7 @@ class MQTTTransportStage(PipelineStage):
             logger.info("{}: completing disconnect op".format(self.name))
             op = self._active_disconnect_op
             self._active_disconnect_op = None
-            op.error = cause
-            operation_flow.complete_op(stage=self, op=op)
+            operation_flow.complete_op(stage=self, op=op, error=cause)
         else:
             logger.warning("{}: disconnection was unexpected".format(self.name))
             unhandled_exceptions.exception_caught_in_background_thread(cause)
