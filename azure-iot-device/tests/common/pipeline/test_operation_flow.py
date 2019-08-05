@@ -116,7 +116,7 @@ class TestCompleteOp(object):
     @pytest.mark.it("Sets the error in an op, if provided")
     def test_sets_error(self, stage, op, callback, fake_exception):
         op.callback = callback
-        complete_op(stage, op, fake_exception)
+        complete_op(stage=stage, op=op, error=fake_exception)
 
         assert_callback_failed(op=op, error=fake_exception)
         assert op.error is fake_exception
@@ -131,7 +131,7 @@ class TestCompleteOp(object):
         op.error = ValueError()
         assert op.error is not fake_exception
 
-        complete_op(stage, op, fake_exception)
+        complete_op(stage=stage, op=op, error=fake_exception)
         assert_callback_failed(op=op, error=fake_exception)
         assert op.error is fake_exception
 
