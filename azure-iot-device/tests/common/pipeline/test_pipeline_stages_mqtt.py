@@ -328,12 +328,47 @@ def transport_function_throws_base_exception(params, stage, mocker, fake_base_ex
 #         with pytest.raises(UnhandledException):
 #             stage.run_op(op)
 
+# TODO: This should be a testclass shared across all stages
+@pytest.mark.it("MQTTTransportStage - .run_op()")
+class TestMQTTProviderRunOp(object):
+    @pytest.mark.it("Executes the given PipelineOperation")
+    def test_execute_operation(self, mocker, stage):
+        mock_op = mocker.MagicMock()
+        stage._execute_op = mocker.MagicMock()
 
-@pytest.mark.describe("MQTTTransportStage - .run_op() -- called with ConnectOperation")
-class TestMQTTProviderRunOpWithConnect(object):
+        stage.run_op(mock_op)
+
+        assert stage._execute_op.call_count == 1
+        assert stage._execute_op.call_args == mocker.call(mock_op)
+
+    @pytest.mark.it(
+        "Completes the operation with error if an Exception occurs while executing the PipelineOperation"
+    )
+    def test_completes_operation_with_error(self, mocker, stage):
+        execution_exception = Exception()
+        mock_op = mocker.MagicMock()
+        stage._execute_op = mocker.MagicMock(side_effect=execution_exception)
+
+        stage.run_op(mock_op)
+        assert mock_op.error is execution_exception
+
+    @pytest.mark.it(
+        "Allows any BaseException that occurs during execution of the PipelineOperation to propogate"
+    )
+    def test_base_exception_propogates(self, mocker, stage):
+        execution_exception = BaseException()
+        mock_op = mocker.MagicMock()
+        stage._execute_op = mocker.MagicMock(side_effect=execution_exception)
+
+        with pytest.raises(BaseException):
+            stage.run_op(mock_op)
+
+
+@pytest.mark.describe("MQTTTransportStage - ._execute_op() -- called with ConnectOperation")
+class TestMQTTProviderExecuteOpWithConnect(object):
     @pytest.mark.it("Sets the ConnectOperation as the pending connection operation")
     def test_sets_pending_operation(self, stage, create_transport, op_connect):
-        stage.run_op(op_connect)
+        stage._execute_op(op_connect)
         assert stage._pending_connection_op is op_connect
 
     @pytest.mark.it("Cancels any already pending connection operation")
@@ -350,7 +385,7 @@ class TestMQTTProviderRunOpWithConnect(object):
     ):
         pending_connection_op.callback = mocker.MagicMock()
         stage._pending_connection_op = pending_connection_op
-        stage.run_op(op_connect)
+        stage._execute_op(op_connect)
 
         # Callback has been completed, with a PipelineError set indicating early cancellation
         assert pending_connection_op.callback.call_count == 1
@@ -361,7 +396,7 @@ class TestMQTTProviderRunOpWithConnect(object):
 
     @pytest.mark.it("Does an MQTT connect via the MQTTTransport")
     def test_mqtt_connect(self, mocker, stage, create_transport, op_connect):
-        stage.run_op(op_connect)
+        stage._execute_op(op_connect)
         assert stage.transport.connect.call_count == 1
         assert stage.transport.connect.call_args == mocker.call(password=stage.sas_token)
 
@@ -372,7 +407,8 @@ class TestMQTTProviderRunOpWithConnect(object):
         self, mocker, stage, create_transport, op_connect, fake_exception
     ):
         stage.transport.connect = mocker.MagicMock(side_effect=fake_exception)
-        stage.run_op(op_connect)
+        with pytest.raises(fake_exception):
+            stage._execute_op(op_connect)
         assert stage._pending_connection_op is None
 
     # @pytest.mark.it("")
