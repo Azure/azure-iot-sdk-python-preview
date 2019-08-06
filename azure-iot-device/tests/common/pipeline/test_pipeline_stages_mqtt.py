@@ -342,7 +342,7 @@ class TestMQTTProviderRunOp(object):
         assert stage._execute_op.call_args == mocker.call(mock_op)
 
     @pytest.mark.it(
-        "Completes the operation with error if an Exception occurs while executing the PipelineOperation"
+        "Completes the operation with error if an Exception is raised while executing the PipelineOperation"
     )
     def test_completes_operation_with_error(self, mocker, stage):
         execution_exception = Exception()
@@ -353,7 +353,7 @@ class TestMQTTProviderRunOp(object):
         assert mock_op.error is execution_exception
 
     @pytest.mark.it(
-        "Allows any BaseException that occurs during execution of the PipelineOperation to propogate"
+        "Allows any BaseException that was raised during execution of the PipelineOperation to propogate"
     )
     def test_base_exception_propogates(self, mocker, stage):
         execution_exception = BaseException()
@@ -401,15 +401,19 @@ class TestMQTTProviderExecuteOpWithConnect(object):
         assert stage.transport.connect.call_args == mocker.call(password=stage.sas_token)
 
     @pytest.mark.it(
-        "Sets the pending connection operation to None if there is a failure sending connect in the MQTTTransport"
+        "Sets the pending connection operation to None if there is a failure connecting in the MQTTTransport"
+    )
+    @pytest.mark.parametrize(
+        "exception",
+        [errors.ProtocolClientError, errors.ConnectionFailedError, errors.UnauthorizedError],
     )
     def test_clears_pending_operation_on_failure(
-        self, mocker, stage, create_transport, op_connect, fake_exception
+        self, mocker, stage, create_transport, op_connect, exception
     ):
-        stage.transport.connect = mocker.MagicMock(side_effect=fake_exception)
-        with pytest.raises(fake_exception):
-            stage._execute_op(op_connect)
+        stage.transport.connect = mocker.MagicMock(side_effect=exception)
         assert stage._pending_connection_op is None
+
+        stage._execute_op(op_connect)
 
     # @pytest.mark.it("")
 

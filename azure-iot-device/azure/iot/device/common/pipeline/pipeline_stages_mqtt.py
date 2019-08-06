@@ -96,7 +96,11 @@ class MQTTTransportStage(PipelineStage):
             self._pending_connection_op = op
             try:
                 self.transport.connect(password=self.sas_token)
-            except Exception as e:
+            except (
+                errors.ProtocolClientError,
+                errors.ConnectionFailedError,
+                errors.UnauthorizedError,
+            ) as e:
                 self._pending_connection_op = None
                 raise e
 
