@@ -102,7 +102,8 @@ class MQTTTransportStage(PipelineStage):
                 errors.UnauthorizedError,
             ) as e:
                 self._pending_connection_op = None
-                raise e
+                op.error = e
+                operation_flow.complete_op(self, op)
 
         elif isinstance(op, pipeline_ops_base.ReconnectOperation):
             logger.info("{}({}): reconnecting".format(self.name, op.name))
@@ -112,9 +113,14 @@ class MQTTTransportStage(PipelineStage):
             self._pending_connection_op = op
             try:
                 self.transport.reconnect(password=self.sas_token)
-            except Exception as e:
+            except (
+                errors.ProtocolClientError,
+                errors.ConnectionFailedError,
+                errors.UnauthorizedError,
+            ) as e:
                 self._pending_connection_op = None
-                raise e
+                op.error = e
+                operation_flow.complete_op(self, op)
 
         elif isinstance(op, pipeline_ops_base.DisconnectOperation):
             logger.info("{}({}): disconnecting".format(self.name, op.name))
@@ -123,9 +129,14 @@ class MQTTTransportStage(PipelineStage):
             self._pending_connection_op = op
             try:
                 self.transport.disconnect()
-            except Exception as e:
+            except (
+                errors.ProtocolClientError,
+                errors.ConnectionFailedError,
+                errors.UnauthorizedError,
+            ) as e:
                 self._pending_connection_op = None
-                raise e
+                op.error = e
+                operation_flow.complete_op(self, op)
 
         elif isinstance(op, pipeline_ops_mqtt.MQTTPublishOperation):
             logger.info("{}({}): publishing on {}".format(self.name, op.name, op.topic))
