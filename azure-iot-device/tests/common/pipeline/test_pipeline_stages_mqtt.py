@@ -271,18 +271,10 @@ class TestMQTTProviderExecuteOpWithConnect(RunOpTests):
     @pytest.mark.it(
         "Fails the operation and resets the pending connection operation to None, if there is a failure connecting in the MQTTTransport"
     )
-    @pytest.mark.parametrize(
-        "exception",
-        [
-            pytest.param(errors.ProtocolClientError(), id="ProtoclClientError"),
-            pytest.param(errors.ConnectionFailedError(), id="ConnectionFailedError"),
-            pytest.param(errors.UnauthorizedError(), id="UnauthorizedError"),
-        ],
-    )
-    def test_fails_operation(self, stage, create_transport, op_connect, exception):
-        stage.transport.connect.side_effect = exception
+    def test_fails_operation(self, stage, create_transport, op_connect, fake_exception):
+        stage.transport.connect.side_effect = fake_exception
         stage.run_op(op_connect)
-        assert_callback_failed(op=op_connect, error=exception)
+        assert_callback_failed(op=op_connect, error=fake_exception)
         assert stage._pending_connection_op is None
 
 
@@ -324,18 +316,10 @@ class TestMQTTProviderExecuteOpWithReconnect(RunOpTests):
     @pytest.mark.it(
         "Fails the operation and resets the pending connection operation to None, if there is a failure reconnecting in the MQTTTransport"
     )
-    @pytest.mark.parametrize(
-        "exception",
-        [
-            pytest.param(errors.ProtocolClientError(), id="ProtoclClientError"),
-            pytest.param(errors.ConnectionFailedError(), id="ConnectionFailedError"),
-            pytest.param(errors.UnauthorizedError(), id="UnauthorizedError"),
-        ],
-    )
-    def test_fails_operation(self, mocker, stage, create_transport, op_reconnect, exception):
-        stage.transport.reconnect.side_effect = exception
+    def test_fails_operation(self, mocker, stage, create_transport, op_reconnect, fake_exception):
+        stage.transport.reconnect.side_effect = fake_exception
         stage.run_op(op_reconnect)
-        assert_callback_failed(op=op_reconnect, error=exception)
+        assert_callback_failed(op=op_reconnect, error=fake_exception)
         assert stage._pending_connection_op is None
 
 
@@ -377,18 +361,10 @@ class TestMQTTProviderExecuteOpWithDisconnect(RunOpTests):
     @pytest.mark.it(
         "Fails the operation and resets the pending connection operation to None, if there is a failure disconnecting in the MQTTTransport"
     )
-    @pytest.mark.parametrize(
-        "exception",
-        [
-            pytest.param(errors.ProtocolClientError(), id="ProtoclClientError"),
-            pytest.param(errors.ConnectionFailedError(), id="ConnectionFailedError"),
-            pytest.param(errors.UnauthorizedError(), id="UnauthorizedError"),
-        ],
-    )
-    def test_fails_operation(self, mocker, stage, create_transport, op_disconnect, exception):
-        stage.transport.disconnect.side_effect = exception
+    def test_fails_operation(self, mocker, stage, create_transport, op_disconnect, fake_exception):
+        stage.transport.disconnect.side_effect = fake_exception
         stage.run_op(op_disconnect)
-        assert_callback_failed(op=op_disconnect, error=exception)
+        assert_callback_failed(op=op_disconnect, error=fake_exception)
         assert stage._pending_connection_op is None
 
 

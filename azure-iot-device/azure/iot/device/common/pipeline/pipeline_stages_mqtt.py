@@ -96,11 +96,7 @@ class MQTTTransportStage(PipelineStage):
             self._pending_connection_op = op
             try:
                 self.transport.connect(password=self.sas_token)
-            except (
-                errors.ProtocolClientError,
-                errors.ConnectionFailedError,
-                errors.UnauthorizedError,
-            ) as e:
+            except Exception as e:
                 self._pending_connection_op = None
                 op.error = e
                 operation_flow.complete_op(self, op)
@@ -113,11 +109,7 @@ class MQTTTransportStage(PipelineStage):
             self._pending_connection_op = op
             try:
                 self.transport.reconnect(password=self.sas_token)
-            except (
-                errors.ProtocolClientError,
-                errors.ConnectionFailedError,
-                errors.UnauthorizedError,
-            ) as e:
+            except Exception as e:
                 self._pending_connection_op = None
                 op.error = e
                 operation_flow.complete_op(self, op)
@@ -129,11 +121,7 @@ class MQTTTransportStage(PipelineStage):
             self._pending_connection_op = op
             try:
                 self.transport.disconnect()
-            except (
-                errors.ProtocolClientError,
-                errors.ConnectionFailedError,
-                errors.UnauthorizedError,
-            ) as e:
+            except Exception as e:
                 self._pending_connection_op = None
                 op.error = e
                 operation_flow.complete_op(self, op)
