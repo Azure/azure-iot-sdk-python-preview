@@ -191,6 +191,8 @@ class MQTTTransportStage(PipelineStage):
     def _on_mqtt_connection_failure(self, cause):
         """
         Handler that gets called by the transport when a connection fails.
+
+        :param Exception cause: The Exception that caused the connection failure.
         """
 
         logger.error("{}: _on_mqtt_connection_failure called: {}".format(self.name, cause))
