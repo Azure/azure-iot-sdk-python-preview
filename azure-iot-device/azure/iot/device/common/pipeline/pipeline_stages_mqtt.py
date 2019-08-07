@@ -208,11 +208,11 @@ class MQTTTransportStage(PipelineStage):
             unhandled_exceptions.exception_caught_in_background_thread(cause)
 
     @pipeline_thread.invoke_on_pipeline_thread_nowait
-    def _on_mqtt_disconnected(self, cause):
+    def _on_mqtt_disconnected(self, cause=None):
         """
         Handler that gets called by the transport when the transport disconnects.
 
-        :param Exception cause: The Exception that caused the disconnection, if any
+        :param Exception cause: The Exception that caused the disconnection, if any (optional)
         """
         logger.error("{}: _on_mqtt_disconnect called: {}".format(self.name, cause))
 
