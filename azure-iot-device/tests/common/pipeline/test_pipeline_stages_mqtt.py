@@ -7,7 +7,7 @@ import logging
 import pytest
 import sys
 import six
-from azure.iot.device.common import errors
+from azure.iot.device.common import errors, unhandled_exceptions
 from azure.iot.device.common.pipeline import (
     pipeline_ops_base,
     pipeline_stages_base,
@@ -456,137 +456,235 @@ class TestMQTTProviderProtocolClientEvents(object):
 
 @pytest.mark.describe("MQTTTransportStage - EVENT: MQTT connected")
 class TestMQTTProviderOnConnected(object):
-    @pytest.mark.it(
-        "Calls self.on_connected when the transport connected event fires, if there is no active connect op"
+    @pytest.mark.it("Calls self.on_connected when the transport connected event fires")
+    @pytest.mark.parametrize(
+        "pending_connection_op",
+        [
+            pytest.param(None, id="No pending operation"),
+            pytest.param(pipeline_ops_base.ConnectOperation(), id="Pending ConnectOperation"),
+            pytest.param(pipeline_ops_base.ReconnectOperation(), id="Pending ReconnectOperation"),
+            pytest.param(pipeline_ops_base.DisconnectOperation(), id="Pending DisconnectOperation"),
+        ],
     )
-    def test_connected_handler(self, stage, create_transport, mocker):
+    def test_connected_handler(self, stage, create_transport, pending_connection_op):
+        stage._pending_connection_op = pending_connection_op
         assert stage.previous.on_connected.call_count == 0
         stage.transport.on_mqtt_connected_handler()
         assert stage.previous.on_connected.call_count == 1
 
-    @pytest.mark.it("Completes a pending connect op when the transport connected event fires")
-    def test_completes_active_connect_op(self, mocker, stage, create_transport):
+    @pytest.mark.it(
+        "Completes a pending ConnectOperation with success when the transport connected event fires"
+    )
+    def test_completes_pending_connect_op(self, mocker, stage, create_transport):
         op = pipeline_ops_base.ConnectOperation(callback=mocker.MagicMock())
         stage.run_op(op)
         assert op.callback.call_count == 0
+        assert stage._pending_connection_op is op
         stage.transport.on_mqtt_connected_handler()
         assert_callback_succeeded(op=op)
+        assert stage._pending_connection_op is None
 
-    @pytest.mark.it("Completes an pending reconnect op when the transport connected event fires")
-    def test_completes_active_reconenct_op(self, mocker, stage, create_transport):
+    @pytest.mark.it(
+        "Completes a pending ReconnectOperation with success when the transport connected event fires"
+    )
+    def test_completes_pending_reconnect_op(self, mocker, stage, create_transport):
         op = pipeline_ops_base.ReconnectOperation(callback=mocker.MagicMock())
         stage.run_op(op)
         assert op.callback.call_count == 0
+        assert stage._pending_connection_op is op
         stage.transport.on_mqtt_connected_handler()
         assert_callback_succeeded(op=op)
+        assert stage._pending_connection_op is None
 
     @pytest.mark.it(
-        "Calls self.on_connected when the transport connected event fires, if there is a pending connect op"
+        "Ignores a pending DisconnectOperation when the transport connected event fires"
     )
-    def test_calls_handler_with_active_connect_op(self, mocker, stage, create_transport):
-        op = pipeline_ops_base.ConnectOperation(callback=mocker.MagicMock())
+    def test_ignores_pending_disconnect_op(self, mocker, stage, create_transport):
+        op = pipeline_ops_base.DisconnectOperation(callback=mocker.MagicMock())
         stage.run_op(op)
-        assert stage.previous.on_connected.call_count == 0
+        assert op.callback.call_count == 0
+        assert stage._pending_connection_op is op
         stage.transport.on_mqtt_connected_handler()
-        assert stage.previous.on_connected.call_count == 1
-
-    @pytest.mark.it(
-        "Calls self.on_connected when the transport connected event fires, if there is a pending reconnect op"
-    )
-    def test_calls_handler_with_active_reconnect_op(self, mocker, stage, create_transport):
-        op = pipeline_ops_base.ReconnectOperation(callback=mocker.MagicMock())
-        stage.run_op(op)
-        assert stage.previous.on_connected.call_count == 0
-        stage.transport.on_mqtt_connected_handler()
-        assert stage.previous.on_connected.call_count == 1
+        # handler did NOT trigger a callback
+        assert op.callback.call_count == 0
+        assert stage._pending_connection_op is op
 
 
 @pytest.mark.describe("MQTTTarnsportStage - EVENT: MQTT connection failure")
 class TestMQTTProviderOnConnectionFailure(object):
     @pytest.mark.it(
-        "Does not call on_connected when the connection failure event fires and there is no pending connect op"
+        "Does not call self.on_connected when the transport connection failure event fires"
     )
-    def test_does_not_call_handler_with_no_active_op(self, stage, create_transport, fake_exception):
-        assert stage.previous.on_connected.call_count == 0
-        stage.transport.on_mqtt_connection_failure_handler(fake_exception)
-        assert stage.previous.on_connected.call_count == 0
-
-    @pytest.mark.it(
-        "Does not call on_connected when the connection failure event fires and there is a a pending connect op"
+    @pytest.mark.parametrize(
+        "pending_connection_op",
+        [
+            pytest.param(None, id="No pending operation"),
+            pytest.param(pipeline_ops_base.ConnectOperation(), id="Pending ConnectOperation"),
+            pytest.param(pipeline_ops_base.ReconnectOperation(), id="Pending ReconnectOperation"),
+            pytest.param(pipeline_ops_base.DisconnectOperation(), id="Pending DisconnectOperation"),
+        ],
     )
-    def test_does_not_call_handler_with_active_connect_op(
-        self, mocker, stage, create_transport, fake_exception
+    def test_does_not_call_connected_handler(
+        self, stage, create_transport, fake_exception, pending_connection_op
     ):
-        op = pipeline_ops_base.ConnectOperation(callback=mocker.MagicMock())
-        stage.run_op(op)
+        # This test is testing negative space - something the function does NOT do - rather than something it does
+        stage._pending_connection_op = pending_connection_op
         assert stage.previous.on_connected.call_count == 0
         stage.transport.on_mqtt_connection_failure_handler(fake_exception)
         assert stage.previous.on_connected.call_count == 0
 
-    @pytest.mark.it(
-        "Does not call on_connected when the connection failure event fires and there is an pending reconnect op"
-    )
-    def test_does_not_call_handler_with_active_reconnect_op(
-        self, mocker, stage, create_transport, fake_exception
-    ):
-        op = pipeline_ops_base.ReconnectOperation(callback=mocker.MagicMock())
-        stage.run_op(op)
-        assert stage.previous.on_connected.call_count == 0
-        stage.transport.on_mqtt_connection_failure_handler(fake_exception)
-        assert stage.previous.on_connected.call_count == 0
-
-    @pytest.mark.it("Fails a pending connect op if the connection failure event fires")
-    def test_fails_active_connect_op(self, mocker, stage, create_transport, fake_exception):
+    @pytest.mark.it("Fails a pending ConnectOperation if the connection failure event fires")
+    def test_fails_pending_connect_op(self, mocker, stage, create_transport, fake_exception):
         op = pipeline_ops_base.ConnectOperation(callback=mocker.MagicMock())
         stage.run_op(op)
         assert op.callback.call_count == 0
+        assert stage._pending_connection_op is op
         stage.transport.on_mqtt_connection_failure_handler(fake_exception)
         assert_callback_failed(op=op, error=fake_exception)
+        assert stage._pending_connection_op is None
 
-    @pytest.mark.it("Fails a pending reconnect op if the connection failure event fires")
-    def test_fails_active_reconnect_op(self, mocker, stage, create_transport, fake_exception):
+    @pytest.mark.it("Fails a pending ReconnectOperation if the connection failure event fires")
+    def test_fails_pending_reconnect_op(self, mocker, stage, create_transport, fake_exception):
         op = pipeline_ops_base.ReconnectOperation(callback=mocker.MagicMock())
         stage.run_op(op)
         assert op.callback.call_count == 0
+        assert stage._pending_connection_op is op
         stage.transport.on_mqtt_connection_failure_handler(fake_exception)
         assert_callback_failed(op=op, error=fake_exception)
+        assert stage._pending_connection_op is None
+
+    @pytest.mark.it("Ignores a pending DisconnectOperation if the connection failure event fires")
+    def test_ignores_pending_disconnect_op(self, mocker, stage, create_transport, fake_exception):
+        op = pipeline_ops_base.DisconnectOperation(callback=mocker.MagicMock())
+        stage.run_op(op)
+        assert op.callback.call_count == 0
+        assert stage._pending_connection_op is op
+        stage.transport.on_mqtt_connection_failure_handler(fake_exception)
+        # Assert nothing changed about the operation
+        assert op.callback.call_count == 0
+        assert stage._pending_connection_op is op
+
+    @pytest.mark.it(
+        "Triggers the unhandled exception handler (with error cause) when the connection failure is unexpected"
+    )
+    @pytest.mark.parametrize(
+        "pending_connection_op",
+        [
+            pytest.param(None, id="No pending operation"),
+            pytest.param(pipeline_ops_base.DisconnectOperation(), id="Pending DisconnectOperation"),
+        ],
+    )
+    def test_unexpected_connection_failure(
+        self, mocker, stage, create_transport, fake_exception, pending_connection_op
+    ):
+        # A connection failure is unexpected if there is not a pending Connect/Reconnect operation
+        # i.e. "Why did we get a connection failure? We weren't even trying to connect!"
+        mock_handler = mocker.patch.object(
+            unhandled_exceptions, "exception_caught_in_background_thread"
+        )
+        stage._pending_connection_operation = pending_connection_op
+        stage.transport.on_mqtt_connection_failure_handler(fake_exception)
+        assert mock_handler.call_count == 1
+        assert mock_handler.call_args[0][0] is fake_exception
 
 
 @pytest.mark.describe("MQTTTransportStage - EVENT: MQTT disconnected")
 class TestMQTTProviderOnDisconnected(object):
     @pytest.mark.it("Calls self.on_disconnected when the transport disconnected event fires")
-    def test_disconnected_handler(self, stage, create_transport):
+    @pytest.mark.parametrize(
+        "cause",
+        [pytest.param(None, id="No error cause"), pytest.param(Exception(), id="With error cause")],
+    )
+    @pytest.mark.parametrize(
+        "pending_connection_op",
+        [
+            pytest.param(None, id="No pending operation"),
+            pytest.param(pipeline_ops_base.ConnectOperation(), id="Pending ConnectOperation"),
+            pytest.param(pipeline_ops_base.ReconnectOperation(), id="Pending ReconnectOperation"),
+            pytest.param(pipeline_ops_base.DisconnectOperation(), id="Pending DisconnectOperation"),
+        ],
+    )
+    def test_disconnected_handler(self, stage, create_transport, pending_connection_op, cause):
+        stage._pending_connection_op = pending_connection_op
         assert stage.previous.on_disconnected.call_count == 0
-        stage.transport.on_mqtt_disconnected_handler(None)
+        stage.transport.on_mqtt_disconnected_handler(cause)
         assert stage.previous.on_disconnected.call_count == 1
 
     @pytest.mark.it(
-        "Calls self.on_disconnected when the transport disconnected event fires with error"
+        "Completes a pending DisconnectOperation with success when the transport disconnected event fires without an error cause"
     )
-    def test_disconnected_handler_with_error(self, mocker, stage, create_transport, fake_exception):
-        assert stage.previous.on_disconnected.call_count == 0
-        stage.transport.on_mqtt_disconnected_handler(fake_exception)
-        assert stage.previous.on_disconnected.call_count == 1
-
-    @pytest.mark.it("Completes a pending disconnect op when the transport disconnected event fires")
-    def test_compltetes_active_disconnect_op_when_no_error(self, mocker, stage, create_transport):
+    def test_compltetes_pending_disconnect_op_when_no_error(self, mocker, stage, create_transport):
         op = pipeline_ops_base.DisconnectOperation(callback=mocker.MagicMock())
         stage.run_op(op)
         assert op.callback.call_count == 0
+        assert stage._pending_connection_op is op
         stage.transport.on_mqtt_disconnected_handler(None)
         assert_callback_succeeded(op=op)
+        assert stage._pending_connection_op is None
 
     @pytest.mark.it(
-        "Completes a pending disconnect op with no error when the transport disconnected event fires with a ConnectionDroppedError error that wraps the error"
+        "Completes a pending DisconnectOperation with failure (from ConnectionDroppedError) when the transport disconnected event fires with an error cause"
     )
-    def test_completes_active_disconnect_op_when_error(
+    def test_completes_pending_disconnect_op_with_error(
         self, mocker, stage, create_transport, fake_exception
     ):
         op = pipeline_ops_base.DisconnectOperation(callback=mocker.MagicMock())
         stage.run_op(op)
         assert op.callback.call_count == 0
+        assert stage._pending_connection_op is op
         stage.transport.on_mqtt_disconnected_handler(fake_exception)
-        assert_callback_failed(op=op)
-        assert isinstance(op.error, errors.ConnectionDroppedError)
+        assert_callback_failed(op=op, error=errors.ConnectionDroppedError)
+        assert stage._pending_connection_op is None
         if six.PY3:
-            assert op.error.__cause__ == fake_exception
+            assert op.error.__cause__ is fake_exception
+
+    @pytest.mark.it(
+        "Ignores an unrelated pending operation when the transport disconnected event fires"
+    )
+    @pytest.mark.parametrize(
+        "cause",
+        [pytest.param(None, id="No error cause"), pytest.param(Exception(), id="With error cause")],
+    )
+    @pytest.mark.parametrize(
+        "pending_connection_op",
+        [
+            pytest.param(pipeline_ops_base.ConnectOperation(), id="Pending ConnectOperation"),
+            pytest.param(pipeline_ops_base.ReconnectOperation(), id="Pending ReconnectOperation"),
+        ],
+    )
+    def test_ignores_unrelated_op(
+        self, mocker, stage, create_transport, pending_connection_op, cause
+    ):
+        stage._pending_connection_op = pending_connection_op
+        stage.transport.on_mqtt_disconnected_handler(cause)
+        # The unrelated pending operation is STILL the pending connection op
+        assert stage._pending_connection_op is pending_connection_op
+
+    @pytest.mark.it(
+        "Triggers the unhandled exception handler (with ConnectionDroppedError) when the disconnect is unexpected"
+    )
+    @pytest.mark.parametrize(
+        "cause",
+        [pytest.param(None, id="No error cause"), pytest.param(Exception(), id="With error cause")],
+    )
+    @pytest.mark.parametrize(
+        "pending_connection_op",
+        [
+            pytest.param(None, id="No pending operation"),
+            pytest.param(pipeline_ops_base.ConnectOperation(), id="Pending ConnectOperation"),
+            pytest.param(pipeline_ops_base.ReconnectOperation(), id="Pending ReconnectOperation"),
+        ],
+    )
+    def test_unexpected_disconnect(
+        self, mocker, stage, create_transport, pending_connection_op, cause
+    ):
+        # A disconnect is unexpected when there is no pending operation, or a pending, non-Disconnect operation
+        mock_handler = mocker.patch.object(
+            unhandled_exceptions, "exception_caught_in_background_thread"
+        )
+        stage._pending_connection_op = pending_connection_op
+        stage.transport.on_mqtt_disconnected_handler(cause)
+        assert mock_handler.call_count == 1
+        assert isinstance(mock_handler.call_args[0][0], errors.ConnectionDroppedError)
+        if six.PY3:
+            assert mock_handler.call_args[0][0].__cause__ is cause
