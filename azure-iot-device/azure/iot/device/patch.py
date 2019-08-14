@@ -6,6 +6,7 @@
 """This module provides patches used to dynamically modify items from the libraries"""
 
 import inspect
+import six
 
 
 def add_shims_for_inherited_methods(target_class):
@@ -38,17 +39,13 @@ def add_shims_for_inherited_methods(target_class):
     for method in all_methods:
         method_name = method[0]
         method_obj = method[1]
+        originating_module = inspect.getmodule(method_obj)
         # NOTE: we here use the __qualname__ attribute to find the class name where the method was
         # defined. This is the only way to do it, however this COULD potentially be flawed,
         # if the class itself was dynamically built.
         # If you're encountering errors as a result of this function, they are probably here.
-        originating_module = inspect.getmodule(method_obj)
-        originating_class_name = method_obj.__qualname__.split(".")[
-            0
-        ]  # Get classname where method is defined
-        originating_class_obj = getattr(
-            originating_module, originating_class_name
-        )  # Get class object where method is defined
+        originating_class_name = method_obj.__qualname__.split(".")[0]
+        originating_class_obj = getattr(originating_module, originating_class_name)
 
         # Create a shim method for all public methods inherited from a parent class
         if method_name[0] != "_" and originating_class_obj != target_class:
