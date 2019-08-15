@@ -32,7 +32,6 @@ def add_shims_for_inherited_methods(target_class):
 
     # Import the class we're adding methods to, so that functions defined in this scope can use super()
     class_module = inspect.getmodule(target_class)
-    exec("del {target_class}".format(target_class.__name__), globals())  # Prevent name collisions
     exec(
         "from {module} import {target_class}".format(
             module=class_module.__name__, target_class=target_class.__name__
@@ -117,5 +116,8 @@ def add_shims_for_inherited_methods(target_class):
                     )
                 )
 
-            # NOTE: the __qualname__ attributes of these new shim methods point to THIS module, not the class itself.
-            # This shouldn't matter, but in case it does, I am documenting that fact here.
+    # Remove the imported class to prevent name collisions in future patches
+    exec("del {target_class}".format(target_class=target_class.__name__), globals())
+
+    # NOTE: the __qualname__ attributes of these new shim methods point to THIS module, not the class itself.
+    # This shouldn't matter, but in case it does, I am documenting that fact here.
