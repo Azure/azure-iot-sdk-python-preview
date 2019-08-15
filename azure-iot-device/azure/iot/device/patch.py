@@ -5,8 +5,8 @@
 # --------------------------------------------------------------------------
 """This module provides patches used to dynamically modify items from the libraries"""
 
+import sys
 import inspect
-import six
 import logging
 
 logger = logging.getLogger(__name__)
@@ -30,11 +30,17 @@ def add_shims_for_inherited_methods(target_class):
     class_methods = inspect.getmembers(target_class, predicate=inspect.ismethod)
     all_methods = class_functions + class_methods
 
+    # We must alias classnames to prevent naming collisions when this fn is called multiple times
+    # with classes that share a name. If we've already used this classname, add trailing underscore(s)
+    classname_alias = target_class.__name__
+    while classname_alias in globals():
+        classname_alias += "_"
+
     # Import the class we're adding methods to, so that functions defined in this scope can use super()
     class_module = inspect.getmodule(target_class)
     exec(
-        "from {module} import {target_class}".format(
-            module=class_module.__name__, target_class=target_class.__name__
+        "from {module} import {target_class} as {alias}".format(
+            module=class_module.__name__, target_class=target_class.__name__, alias=classname_alias
         ),
         globals(),
     )
@@ -91,7 +97,7 @@ def add_shims_for_inherited_methods(target_class):
                 def_syntax=def_syntax,
                 method_name=method_name,
                 signature=str(method_sig),
-                leaf_class=target_class.__name__,
+                leaf_class=classname_alias,
                 object_or_type=obj_or_type,
                 invocation=str(invoke_params),
             )
@@ -116,8 +122,8 @@ def add_shims_for_inherited_methods(target_class):
                     )
                 )
 
-    # Remove the imported class to prevent name collisions in future patches
-    exec("del {target_class}".format(target_class=target_class.__name__), globals())
+    # # Remove the imported class to prevent name collisions in future patches
+    # exec("del {target_class}".format(target_class=target_class.__name__), globals())
 
     # NOTE: the __qualname__ attributes of these new shim methods point to THIS module, not the class itself.
     # This shouldn't matter, but in case it does, I am documenting that fact here.
