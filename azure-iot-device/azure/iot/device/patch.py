@@ -7,6 +7,9 @@
 
 import inspect
 import six
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def add_shims_for_inherited_methods(target_class):
@@ -92,6 +95,7 @@ def add_shims_for_inherited_methods(target_class):
                 object_or_type=obj_or_type,
                 invocation=str(invoke_params),
             )
+            logger.info("Adding shim: " + new_fn_str)
             exec(new_fn_str, globals())
 
             # Add function to leaf/child class as a method.
