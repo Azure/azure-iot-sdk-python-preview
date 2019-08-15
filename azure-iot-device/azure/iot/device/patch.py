@@ -13,14 +13,14 @@ logger = logging.getLogger(__name__)
 
 
 def add_shims_for_inherited_methods(target_class):
-    """Dynamically add overriding shim methods for all public inherited methods on a child class,
-    which simply call into the parent class implementation of the same method.
+    """Dynamically add overriding, pass-through shim methods for all public inherited methods
+    on a child class, which simply call into the parent class implementation of the same method.
 
     These shim methods will include the same docstrings as the method from the parent class.
 
     This currently only works for Python 3.5+
 
-    :param target_class: The class to add shim methods to
+    :param target_class: The child class to add shim methods to
     """
 
     # Depending on how the method was defined, it could be either a function or a method.
