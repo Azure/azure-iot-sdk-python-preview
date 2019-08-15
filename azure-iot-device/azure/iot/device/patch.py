@@ -18,6 +18,8 @@ def add_shims_for_inherited_methods(target_class):
 
     These shim methods will include the same docstrings as the method from the parent class.
 
+    This currently only works for Python 3.5+
+
     :param target_class: The class to add shim methods to
     """
 
@@ -89,14 +91,17 @@ def add_shims_for_inherited_methods(target_class):
                 obj_or_type = "self"  # Use 'self' to invoke super() for instance methods
             if inspect.iscoroutine(method_obj) or inspect.iscoroutinefunction(method_obj):
                 def_syntax = "async def"  # Define coroutine function/method
+                ret_syntax = "return await"
             else:
                 def_syntax = "def"  # Define function/method
+                ret_syntax = "return"
 
             # Dynamically define a new function, with the same name, that invokes the method of the parent class
-            new_fn_str = "{def_syntax} {method_name}{signature}: return super({leaf_class}, {object_or_type}).{method_name}{invocation}".format(
+            new_fn_str = "{def_syntax} {method_name}{signature}: {ret_syntax} super({leaf_class}, {object_or_type}).{method_name}{invocation}".format(
                 def_syntax=def_syntax,
                 method_name=method_name,
                 signature=str(method_sig),
+                ret_syntax=ret_syntax,
                 leaf_class=classname_alias,
                 object_or_type=obj_or_type,
                 invocation=str(invoke_params),
@@ -121,9 +126,6 @@ def add_shims_for_inherited_methods(target_class):
                         method_name=method_name
                     )
                 )
-
-    # # Remove the imported class to prevent name collisions in future patches
-    # exec("del {target_class}".format(target_class=target_class.__name__), globals())
 
     # NOTE: the __qualname__ attributes of these new shim methods point to THIS module, not the class itself.
     # This shouldn't matter, but in case it does, I am documenting that fact here.
