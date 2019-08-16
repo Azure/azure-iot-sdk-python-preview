@@ -5,6 +5,8 @@ import logging
 import shutil
 import subprocess
 
+
+# TODO : Do we change all print statements to logging ?
 logging.basicConfig(level=logging.DEBUG)
 
 

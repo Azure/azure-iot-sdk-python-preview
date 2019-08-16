@@ -8,11 +8,9 @@ from azure_provisioning_e2e.iothubservice20180630.iot_hub_gateway_service_ap_is2
     IotHubGatewayServiceAPIs20180630,
 )
 
-# from .iot_hub_gateway_service_ap_is20180630 import IotHubGatewayServiceAPIs20180630
 from msrest.exceptions import HttpOperationError
 from azure_provisioning_e2e.iothubservice20180630 import connection_string
 
-# import connection_string
 import uuid
 import time
 import random
@@ -101,54 +99,6 @@ class Helper:
             + ";SharedAccessKey="
             + primary_key
         )
-
-    # def apply_configuration(self, device_id, modules_content):
-    #     content = ConfigurationContent(modules_content=modules_content)
-    #
-    #     run_with_retry(
-    #         self.service.apply_configuration_on_edge_device,
-    #         (device_id, content),
-    #         {"custom_headers": self.headers()},
-    #     )
-    #
-    # def create_device(self, device_id, is_edge=False):
-    #     print("creating device {}".format(device_id))
-    #     try:
-    #         device = run_with_retry(
-    #             self.service.get_device,
-    #             (device_id,),
-    #             {"custom_headers": self.headers()},
-    #         )
-    #         print("using existing device")
-    #     except HttpOperationError:
-    #         device = Device(device_id)
-    #
-    #     if is_edge:
-    #         device.capabilities = DeviceCapabilities(True)
-    #
-    #     run_with_retry(
-    #         self.service.create_or_update_device,
-    #         (device_id, device),
-    #         {"custom_headers": self.headers()},
-    #     )
-    #
-    # def create_device_module(self, device_id, module_id):
-    #     print("creating module {}/{}".format(device_id, module_id))
-    #     try:
-    #         module = run_with_retry(
-    #             self.service.get_module,
-    #             (device_id, module_id),
-    #             {"custom_headers": self.headers()},
-    #         )
-    #         print("using existing device module")
-    #     except HttpOperationError:
-    #         module = Module(module_id, None, device_id)
-    #
-    #     run_with_retry(
-    #         self.service.create_or_update_module,
-    #         (device_id, module_id, module),
-    #         {"custom_headers": self.headers()},
-    #     )
 
     def try_delete_device(self, device_id):
         try:

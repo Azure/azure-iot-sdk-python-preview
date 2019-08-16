@@ -26,28 +26,19 @@ jobs:
       versionSpec: '$(python.version)'
       architecture: 'x64'
 
-  - script: 'python -m pip install --upgrade pip'
-    displayName: 'Update pip'
-
   - script: 'python env_setup.py --no_dev'
-    displayName: 'Prepare environment (install packages + dependencies + tools)'
-
-#  - script: 'python -m pip install azure-iot-device'
-#    displayName: 'Install provisioning device SDK'
-#
-#  - script: 'python -m pip install -U -r requirements_test.txt'
-#    displayName: 'Install provisioning service SDK and pytest'
+    displayName: 'Prepare environment (install packages + dev dependencies + test dependencies + tools)'
 
   - script: |
       cd $(Agent.WorkFolder)
       cd ..
       touch .rnd
-    displayName: 'create random number generator file due to openssl issues'
+    displayName: 'create RANDFILE file (needed to store seed data) separately due to openssl version issues in the pipeline'
 
   - script: |
       cd $(Build.SourcesDirectory)/azure_provisioning_e2e/tests
       pytest test_*.py --junitxml=junit/dps-e2e-test-results.xml
-    displayName: 'Run Specified E2E Test with env variables by going in for cert creation'
+    displayName: 'Run Specified E2E Test with env variables'
 
     env:
       IOTHUB_CONNECTION_STRING: $(PYTHONPREVIEW-LINUX-IOTHUB-CONNECTION-STRING)
