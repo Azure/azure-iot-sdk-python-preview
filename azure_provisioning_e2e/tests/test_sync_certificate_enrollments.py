@@ -91,18 +91,19 @@ def test_device_register_with_no_device_id_for_a_x509_individual_enrollment(befo
 
     device_index = 2
 
-    individual_enrollment_record = create_individual_enrollment_with_x509_client_certs(
-        device_index=device_index
-    )
-    registration_id = individual_enrollment_record.registration_id
+    try:
+        individual_enrollment_record = create_individual_enrollment_with_x509_client_certs(
+            device_index=device_index
+        )
+        registration_id = individual_enrollment_record.registration_id
 
-    device_cert_file = "demoCA/newcerts/device_cert" + str(device_index) + ".pem"
-    device_key_file = "demoCA/private/device_key" + str(device_index) + ".pem"
-    result_from_register(registration_id, device_cert_file, device_key_file)
+        device_cert_file = "demoCA/newcerts/device_cert" + str(device_index) + ".pem"
+        device_key_file = "demoCA/private/device_key" + str(device_index) + ".pem"
+        result_from_register(registration_id, device_cert_file, device_key_file)
 
-    assert_device_provisioned(registration_id)
-
-    service_client.delete_individual_enrollment_by_param(registration_id)
+        assert_device_provisioned(registration_id)
+    finally:
+        service_client.delete_individual_enrollment_by_param(registration_id)
 
 
 @pytest.mark.it(
@@ -113,50 +114,52 @@ def test_group_of_devices_register_with_no_device_id_for_a_x509_intermediate_aut
 ):
     group_id = "e2e-intermediate-hogwarts"
     common_device_id = device_common_name
+    device_count_in_group = 3
     reprovision_policy = ReprovisionPolicy(migrate_device_data=True)
 
-    device_count_in_group = 3
+    try:
+        intermediate_cert_filename = "demoCA/newcerts/intermediate_cert.pem"
+        with open(intermediate_cert_filename, "r") as intermediate_pem:
+            intermediate_cert_content = intermediate_pem.read()
 
-    intermediate_cert_filename = "demoCA/newcerts/intermediate_cert.pem"
-    with open(intermediate_cert_filename, "r") as intermediate_pem:
-        intermediate_cert_content = intermediate_pem.read()
-
-    attestation_mechanism = AttestationMechanism.create_with_x509_signing_certs(
-        intermediate_cert_content
-    )
-    enrollment_group_provisioning_model = EnrollmentGroup.create(
-        group_id, attestation=attestation_mechanism, reprovision_policy=reprovision_policy
-    )
-
-    service_client.create_or_update(enrollment_group_provisioning_model)
-
-    count = 0
-    common_device_key_input_file = "demoCA/private/device_key"
-    common_device_cert_input_file = "demoCA/newcerts/device_cert"
-    common_device_inter_cert_chain_file = "demoCA/newcerts/out_inter_device_chain_cert"
-    for index in range(3, 3 + device_count_in_group):
-        count = count + 1
-        device_id = common_device_id + str(index)
-        device_key_input_file = common_device_key_input_file + str(index) + ".pem"
-        device_cert_input_file = common_device_cert_input_file + str(index) + ".pem"
-        device_inter_cert_chain_file = common_device_inter_cert_chain_file + str(index) + ".pem"
-        filenames = [device_cert_input_file, intermediate_cert_filename]
-        with open(device_inter_cert_chain_file, "w") as outfile:
-            for fname in filenames:
-                with open(fname) as infile:
-                    outfile.write(infile.read())
-
-        result_from_register(
-            registration_id=device_id,
-            device_cert_file=device_inter_cert_chain_file,
-            device_key_file=device_key_input_file,
+        attestation_mechanism = AttestationMechanism.create_with_x509_signing_certs(
+            intermediate_cert_content
+        )
+        enrollment_group_provisioning_model = EnrollmentGroup.create(
+            group_id, attestation=attestation_mechanism, reprovision_policy=reprovision_policy
         )
 
-        assert_device_provisioned(device_id)
+        service_client.create_or_update(enrollment_group_provisioning_model)
 
-    # Make sure space is okay. The following 2 lines must be outside for loop.
-    assert count == device_count_in_group
-    service_client.delete_enrollment_group_by_param(group_id)
+        count = 0
+        common_device_key_input_file = "demoCA/private/device_key"
+        common_device_cert_input_file = "demoCA/newcerts/device_cert"
+        common_device_inter_cert_chain_file = "demoCA/newcerts/out_inter_device_chain_cert"
+        for index in range(3, 3 + device_count_in_group):
+            count = count + 1
+            device_id = common_device_id + str(index)
+            device_key_input_file = common_device_key_input_file + str(index) + ".pem"
+            device_cert_input_file = common_device_cert_input_file + str(index) + ".pem"
+            device_inter_cert_chain_file = common_device_inter_cert_chain_file + str(index) + ".pem"
+            filenames = [device_cert_input_file, intermediate_cert_filename]
+            with open(device_inter_cert_chain_file, "w") as outfile:
+                for fname in filenames:
+                    with open(fname) as infile:
+                        outfile.write(infile.read())
+
+            result_from_register(
+                registration_id=device_id,
+                device_cert_file=device_inter_cert_chain_file,
+                device_key_file=device_key_input_file,
+            )
+
+            assert_device_provisioned(device_id)
+
+        # Make sure space is okay. The following line must be outside for loop.
+        assert count == device_count_in_group
+
+    finally:
+        service_client.delete_enrollment_group_by_param(group_id)
 
 
 @pytest.mark.skip(
@@ -170,56 +173,52 @@ def test_group_of_devices_register_with_no_device_id_for_a_x509_ca_authenticatio
 ):
     group_id = "e2e-ca-beauxbatons"
     common_device_id = device_common_name
+    device_count_in_group = 3
     reprovision_policy = ReprovisionPolicy(migrate_device_data=True)
 
-    device_count_in_group = 3
-
-    DPS_GROUP_CA_CERT = os.getenv("PROVISIONING_ROOT_CERT")
-    attestation_mechanism = AttestationMechanism.create_with_x509_ca_refs(ref1=DPS_GROUP_CA_CERT)
-    enrollment_group_provisioning_model = EnrollmentGroup.create(
-        group_id, attestation=attestation_mechanism, reprovision_policy=reprovision_policy
-    )
-
-    service_client.create_or_update(enrollment_group_provisioning_model)
-
-    count = 0
-    intermediate_cert_filename = "demoCA/newcerts/intermediate_cert.pem"
-    common_device_key_input_file = "demoCA/private/device_key"
-    common_device_cert_input_file = "demoCA/newcerts/device_cert"
-    common_device_inter_cert_chain_file = "demoCA/newcerts/out_inter_device_chain_cert"
-    for index in range(6, 6 + device_count_in_group):
-        count = count + 1
-        device_id = common_device_id + str(index)
-        device_key_input_file = common_device_key_input_file + str(index) + ".pem"
-        device_cert_input_file = common_device_cert_input_file + str(index) + ".pem"
-        device_inter_cert_chain_file = common_device_inter_cert_chain_file + str(index) + ".pem"
-        filenames = [device_cert_input_file, intermediate_cert_filename]
-        with open(device_inter_cert_chain_file, "w") as outfile:
-            for fname in filenames:
-                with open(fname) as infile:
-                    logging.debug("Filename is {}".format(fname))
-                    content = infile.read()
-                    logging.debug(content)
-                    # if "device_cert" in fname:
-                    #     logging.debug("device cert is: check below")
-                    # elif "intermediate_cert" in fname:
-                    #     logging.debug("intermediate cert is: check below")
-                    # else:
-                    #     logging.debug("nothing to print")
-                    # logging.debug(content)
-                    outfile.write(content)
-
-        result_from_register(
-            registration_id=device_id,
-            device_cert_file=device_inter_cert_chain_file,
-            device_key_file=device_key_input_file,
+    try:
+        DPS_GROUP_CA_CERT = os.getenv("PROVISIONING_ROOT_CERT")
+        attestation_mechanism = AttestationMechanism.create_with_x509_ca_refs(
+            ref1=DPS_GROUP_CA_CERT
+        )
+        enrollment_group_provisioning_model = EnrollmentGroup.create(
+            group_id, attestation=attestation_mechanism, reprovision_policy=reprovision_policy
         )
 
-        assert_device_provisioned(device_id)
+        service_client.create_or_update(enrollment_group_provisioning_model)
 
-    # Make sure space is okay. The following 2 lines must be outside for loop.
-    assert count == device_count_in_group
-    service_client.delete_enrollment_group_by_param(group_id)
+        count = 0
+        intermediate_cert_filename = "demoCA/newcerts/intermediate_cert.pem"
+        common_device_key_input_file = "demoCA/private/device_key"
+        common_device_cert_input_file = "demoCA/newcerts/device_cert"
+        common_device_inter_cert_chain_file = "demoCA/newcerts/out_inter_device_chain_cert"
+        for index in range(6, 6 + device_count_in_group):
+            count = count + 1
+            device_id = common_device_id + str(index)
+            device_key_input_file = common_device_key_input_file + str(index) + ".pem"
+            device_cert_input_file = common_device_cert_input_file + str(index) + ".pem"
+            device_inter_cert_chain_file = common_device_inter_cert_chain_file + str(index) + ".pem"
+            filenames = [device_cert_input_file, intermediate_cert_filename]
+            with open(device_inter_cert_chain_file, "w") as outfile:
+                for fname in filenames:
+                    with open(fname) as infile:
+                        logging.debug("Filename is {}".format(fname))
+                        content = infile.read()
+                        logging.debug(content)
+                        outfile.write(content)
+
+            result_from_register(
+                registration_id=device_id,
+                device_cert_file=device_inter_cert_chain_file,
+                device_key_file=device_key_input_file,
+            )
+
+            assert_device_provisioned(device_id)
+
+        # Make sure space is okay. The following line must be outside for loop.
+        assert count == device_count_in_group
+    finally:
+        service_client.delete_enrollment_group_by_param(group_id)
 
 
 def assert_device_provisioned(device_id):

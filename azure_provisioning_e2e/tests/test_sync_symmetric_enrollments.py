@@ -27,17 +27,19 @@ device_registry_helper = Helper(os.getenv("IOTHUB_CONNECTION_STRING"))
     "A device gets provisioned to the linked IoTHub with the device_id equal to the registration_id of the individual enrollment that has been created with a symmetric key authentication"
 )
 def test_device_register_with_no_device_id_for_a_symmetric_key_individual_enrollment():
-    individual_enrollment_record = create_individual_enrollment("e2e-dps-underthewhompingwillow")
-    time.sleep(3)
+    try:
+        individual_enrollment_record = create_individual_enrollment(
+            "e2e-dps-underthewhompingwillow"
+        )
 
-    registration_id = individual_enrollment_record.registration_id
-    symmetric_key = individual_enrollment_record.attestation.symmetric_key.primary_key
+        registration_id = individual_enrollment_record.registration_id
+        symmetric_key = individual_enrollment_record.attestation.symmetric_key.primary_key
 
-    result_from_register(registration_id, symmetric_key)
+        result_from_register(registration_id, symmetric_key)
 
-    assert_device_provisioned(device_id=registration_id)
-
-    service_client.delete_individual_enrollment_by_param(registration_id)
+        assert_device_provisioned(device_id=registration_id)
+    finally:
+        service_client.delete_individual_enrollment_by_param(registration_id)
 
 
 @pytest.mark.it(
@@ -46,19 +48,19 @@ def test_device_register_with_no_device_id_for_a_symmetric_key_individual_enroll
 def test_device_register_with_device_id_for_a_symmetric_key_individual_enrollment():
 
     device_id = "e2edpstommarvoloriddle"
-    individual_enrollment_record = create_individual_enrollment(
-        registration_id="e2e-dps-prioriincantatem", device_id=device_id
-    )
-    time.sleep(3)
+    try:
+        individual_enrollment_record = create_individual_enrollment(
+            registration_id="e2e-dps-prioriincantatem", device_id=device_id
+        )
 
-    registration_id = individual_enrollment_record.registration_id
-    symmetric_key = individual_enrollment_record.attestation.symmetric_key.primary_key
+        registration_id = individual_enrollment_record.registration_id
+        symmetric_key = individual_enrollment_record.attestation.symmetric_key.primary_key
 
-    result_from_register(registration_id, symmetric_key)
+        result_from_register(registration_id, symmetric_key)
 
-    assert_device_provisioned(device_id=device_id)
-
-    service_client.delete_individual_enrollment_by_param(registration_id)
+        assert_device_provisioned(device_id=device_id)
+    finally:
+        service_client.delete_individual_enrollment_by_param(registration_id)
 
 
 def create_individual_enrollment(registration_id, device_id=None):
