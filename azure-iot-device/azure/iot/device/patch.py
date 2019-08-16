@@ -12,6 +12,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+# TODO: make this work for Python 2.7 and 3.4
 def add_shims_for_inherited_methods(target_class):
     """Dynamically add overriding, pass-through shim methods for all public inherited methods
     on a child class, which simply call into the parent class implementation of the same method.
@@ -32,6 +33,10 @@ def add_shims_for_inherited_methods(target_class):
     class_methods = inspect.getmembers(target_class, predicate=inspect.ismethod)
     all_methods = class_functions + class_methods
 
+    # This list of attributes gives us a lot of information, but we only are using it to get
+    # the defining class of a given method.
+    class_attributes = inspect.classify_class_attrs(target_class)
+
     # We must alias classnames to prevent naming collisions when this fn is called multiple times
     # with classes that share a name. If we've already used this classname, add trailing underscore(s)
     classname_alias = target_class.__name__
@@ -50,13 +55,10 @@ def add_shims_for_inherited_methods(target_class):
     for method in all_methods:
         method_name = method[0]
         method_obj = method[1]
-        originating_module = inspect.getmodule(method_obj)
-        # NOTE: we here use the __qualname__ attribute to find the class name where the method was
-        # defined. This is the only way to do it, however this COULD potentially be flawed,
-        # if the class itself was dynamically built.
-        # If you're encountering errors as a result of this function, they are probably here.
-        originating_class_name = method_obj.__qualname__.split(".")[0]
-        originating_class_obj = getattr(originating_module, originating_class_name)
+        # We can index on 0 here because the list comprehension will always be exactly 1 element
+        method_attribute = [att for att in class_attributes if att.name == method_name][0]
+        # The object of the class where the method was originally defined.
+        originating_class_obj = method_attribute.defining_class
 
         # Create a shim method for all public methods inherited from a parent class
         if method_name[0] != "_" and originating_class_obj != target_class:
