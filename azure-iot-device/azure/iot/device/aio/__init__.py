@@ -13,3 +13,4 @@ from azure.iot.device import patch
 # It SHOULD not impact the functionality of the methods themselves in any way.
 patch.add_shims_for_inherited_methods(IoTHubDeviceClient)  # noqa: F405
 patch.add_shims_for_inherited_methods(IoTHubModuleClient)  # noqa: F405
+patch.add_shims_for_inherited_methods(ProvisioningDeviceClient)  # noqa: F405
