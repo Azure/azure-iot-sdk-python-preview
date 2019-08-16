@@ -43,7 +43,6 @@ jobs:
 
   - script: |
       cd $(Build.SourcesDirectory)/azure_provisioning_e2e/tests
-      python $(Build.SourcesDirectory)/scripts/check_env_variables.py
       pytest test_*.py --junitxml=junit/dps-e2e-test-results.xml
     displayName: 'Run Specified E2E Test with env variables by going in for cert creation'
 

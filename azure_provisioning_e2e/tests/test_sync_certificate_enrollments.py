@@ -44,7 +44,9 @@ ID_SCOPE = os.getenv("PROVISIONING_DEVICE_IDSCOPE")
 def before_all_tests(request):
     logging.info("set up certificates before cert related tests")
     call_intermediate_cert_creation_from_pipeline(
-        common_name=intermediate_common_name, intermediate_password=intermediate_password
+        common_name=intermediate_common_name,
+        ca_password=os.getenv("PROVISIONING_ROOT_PASSWORD"),
+        intermediate_password=intermediate_password,
     )
     call_device_cert_creation_from_pipeline(
         common_name=device_common_name,
@@ -67,18 +69,19 @@ def test_device_register_with_device_id_for_a_x509_individual_enrollment(before_
     device_id = "e2edpsflyingfeather"
     device_index = 1
 
-    individual_enrollment_record = create_individual_enrollment_with_x509_client_certs(
-        device_index=device_index, device_id=device_id
-    )
-    registration_id = individual_enrollment_record.registration_id
+    try:
+        individual_enrollment_record = create_individual_enrollment_with_x509_client_certs(
+            device_index=device_index, device_id=device_id
+        )
+        registration_id = individual_enrollment_record.registration_id
 
-    device_cert_file = "demoCA/newcerts/device_cert" + str(device_index) + ".pem"
-    device_key_file = "demoCA/private/device_key" + str(device_index) + ".pem"
-    result_from_register(registration_id, device_cert_file, device_key_file)
+        device_cert_file = "demoCA/newcerts/device_cert" + str(device_index) + ".pem"
+        device_key_file = "demoCA/private/device_key" + str(device_index) + ".pem"
+        result_from_register(registration_id, device_cert_file, device_key_file)
 
-    assert_device_provisioned(device_id)
-
-    service_client.delete_individual_enrollment_by_param(registration_id)
+        assert_device_provisioned(device_id)
+    finally:
+        service_client.delete_individual_enrollment_by_param(registration_id)
 
 
 @pytest.mark.it(

@@ -16,7 +16,7 @@ def create_custom_config():
     # The openssl config file extension could be "cfg" or "cnf"
 
     config_path = os.getenv("OPENSSL_CONF")
-    config_path = str(config_path)
+    # config_path = str(config_path)
     with open(config_path, "r") as openssl_config:
         config = openssl_config.read()
     lines = config.splitlines()
@@ -356,7 +356,7 @@ def create_leaf_certificates(
 
 
 def call_intermediate_cert_creation_from_pipeline(
-    common_name, intermediate_password, key_size=4096, days=30
+    common_name, ca_password, intermediate_password, key_size=4096, days=30
 ):
     os.system("mkdir demoCA")
     create_directories_and_prereq_files()
@@ -368,9 +368,8 @@ def call_intermediate_cert_creation_from_pipeline(
     else:
         print("Configuration file have NOT been copied")
 
-    ca_password = os.getenv("PROVISIONING_ROOT_PASSWORD")
-    print(ca_password)
-    print(intermediate_password)
+    print("ca_password={ca_password}".format(ca_password=ca_password))
+    print("intermediate_password={intermediate_password}".format(ca_password=intermediate_password))
 
     create_intermediate(
         common_name=common_name,
