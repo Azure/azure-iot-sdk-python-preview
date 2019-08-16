@@ -29,11 +29,14 @@ jobs:
   - script: 'python -m pip install --upgrade pip'
     displayName: 'Update pip'
 
-  - script: 'python -m pip install azure-iot-device'
-    displayName: 'Install provisioning device SDK'
+  - script: 'python env_setup.py --no_dev'
+    displayName: 'Prepare environment (install packages + dependencies + tools)'
 
-  - script: 'python -m pip install -U -r requirements_test.txt'
-    displayName: 'Install provisioning service SDK and pytest'
+#  - script: 'python -m pip install azure-iot-device'
+#    displayName: 'Install provisioning device SDK'
+#
+#  - script: 'python -m pip install -U -r requirements_test.txt'
+#    displayName: 'Install provisioning service SDK and pytest'
 
   - script: |
       cd $(Agent.WorkFolder)
