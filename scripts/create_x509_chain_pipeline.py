@@ -369,7 +369,11 @@ def call_intermediate_cert_creation_from_pipeline(
         print("Configuration file have NOT been copied")
 
     print("ca_password={ca_password}".format(ca_password=ca_password))
-    print("intermediate_password={intermediate_password}".format(ca_password=intermediate_password))
+    print(
+        "intermediate_password={intermediate_password}".format(
+            intermediate_password=intermediate_password
+        )
+    )
 
     create_intermediate(
         common_name=common_name,
