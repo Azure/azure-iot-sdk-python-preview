@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from azure_provisioning_e2e.service_helper import Helper
+from azure_provisioning_e2e.service_helper import Helper, connection_string_to_hostname
 from azure.iot.device.aio import ProvisioningDeviceClient
 from azure.iot.device.common import X509
 from provisioningserviceclient import (
@@ -37,6 +37,8 @@ service_client = ProvisioningServiceClient.create_from_connection_string(
     os.getenv("PROVISIONING_SERVICE_CONNECTION_STRING")
 )
 device_registry_helper = Helper(os.getenv("IOTHUB_CONNECTION_STRING"))
+linked_iot_hub = connection_string_to_hostname(os.getenv("IOTHUB_CONNECTION_STRING"))
+
 PROVISIONING_HOST = os.getenv("PROVISIONING_DEVICE_ENDPOINT")
 ID_SCOPE = os.getenv("PROVISIONING_DEVICE_IDSCOPE")
 
@@ -86,9 +88,12 @@ async def test_device_register_with_device_id_for_a_x509_individual_enrollment()
 
         device_cert_file = "demoCA/newcerts/device_cert" + str(device_index) + ".pem"
         device_key_file = "demoCA/private/device_key" + str(device_index) + ".pem"
-        await result_from_register(registration_id, device_cert_file, device_key_file)
+        registration_result = await result_from_register(
+            registration_id, device_cert_file, device_key_file
+        )
 
-        assert_device_provisioned(device_id)
+        assert device_id != registration_id
+        assert_device_provisioned(device_id=device_id, registration_result=registration_result)
     finally:
         service_client.delete_individual_enrollment_by_param(registration_id)
 
@@ -107,9 +112,13 @@ async def test_device_register_with_no_device_id_for_a_x509_individual_enrollmen
 
         device_cert_file = "demoCA/newcerts/device_cert" + str(device_index) + ".pem"
         device_key_file = "demoCA/private/device_key" + str(device_index) + ".pem"
-        await result_from_register(registration_id, device_cert_file, device_key_file)
+        registration_result = await result_from_register(
+            registration_id, device_cert_file, device_key_file
+        )
 
-        assert_device_provisioned(registration_id)
+        assert_device_provisioned(
+            device_id=registration_id, registration_result=registration_result
+        )
     finally:
         service_client.delete_individual_enrollment_by_param(registration_id)
 
@@ -154,13 +163,13 @@ async def test_group_of_devices_register_with_no_device_id_for_a_x509_intermedia
                     with open(fname) as infile:
                         outfile.write(infile.read())
 
-            await result_from_register(
+            registration_result = await result_from_register(
                 registration_id=device_id,
                 device_cert_file=device_inter_cert_chain_file,
                 device_key_file=device_key_input_file,
             )
 
-            assert_device_provisioned(device_id)
+            assert_device_provisioned(device_id=device_id, registration_result=registration_result)
 
         # Make sure space is okay. The following line must be outside for loop.
         assert count == device_count_in_group
@@ -213,13 +222,13 @@ async def test_group_of_devices_register_with_no_device_id_for_a_x509_ca_authent
                         logging.debug(content)
                         outfile.write(content)
 
-            await result_from_register(
+            registration_result = await result_from_register(
                 registration_id=device_id,
                 device_cert_file=device_inter_cert_chain_file,
                 device_key_file=device_key_input_file,
             )
 
-            assert_device_provisioned(device_id)
+            assert_device_provisioned(device_id=device_id, registration_result=registration_result)
 
         # Make sure space is okay. The following line must be outside for loop.
         assert count == device_count_in_group
@@ -227,13 +236,17 @@ async def test_group_of_devices_register_with_no_device_id_for_a_x509_ca_authent
         service_client.delete_enrollment_group_by_param(group_id)
 
 
-def assert_device_provisioned(device_id):
+def assert_device_provisioned(device_id, registration_result):
     """
-    Assert that the device has been provisioned correctly to iothub.
+    Assert that the device has been provisioned correctly to iothub from the registration result as well as from the device registry
     :param device_id: The device id
+    :param registration_result: The registration result
     """
-    device = device_registry_helper.get_device(device_id)
+    assert registration_result.status == "assigned"
+    assert registration_result.registration_state.device_id == device_id
+    assert registration_result.registration_state.assigned_hub == linked_iot_hub
 
+    device = device_registry_helper.get_device(device_id)
     assert device is not None
     assert device.authentication.type == "selfSigned"
     assert device.device_id == device_id
@@ -269,4 +282,4 @@ async def result_from_register(registration_id, device_cert_file, device_key_fil
         x509=x509,
     )
 
-    await provisioning_device_client.register()
+    return await provisioning_device_client.register()

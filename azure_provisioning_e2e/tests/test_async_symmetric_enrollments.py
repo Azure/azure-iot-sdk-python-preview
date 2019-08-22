@@ -40,10 +40,9 @@ async def test_device_register_with_no_device_id_for_a_symmetric_key_individual_
 
         registration_result = await result_from_register(registration_id, symmetric_key)
 
-        assert registration_result.status == "assigned"
-        assert registration_result.registration_state.device_id == registration_id
-        assert registration_result.registration_state.assigned_hub == linked_iot_hub
-        assert_device_provisioned(device_id=registration_id)
+        assert_device_provisioned(
+            device_id=registration_id, registration_result=registration_result
+        )
     finally:
         service_client.delete_individual_enrollment_by_param(registration_id)
 
@@ -64,10 +63,8 @@ async def test_device_register_with_device_id_for_a_symmetric_key_individual_enr
 
         registration_result = await result_from_register(registration_id, symmetric_key)
 
-        assert registration_result.status == "assigned"
-        assert registration_result.registration_state.device_id == registration_id
-        assert registration_result.registration_state.assigned_hub == linked_iot_hub
-        assert_device_provisioned(device_id=device_id)
+        assert device_id != registration_id
+        assert_device_provisioned(device_id=device_id, registration_result=registration_result)
     finally:
         service_client.delete_individual_enrollment_by_param(registration_id)
 
@@ -92,13 +89,17 @@ def create_individual_enrollment(registration_id, device_id=None):
     return service_client.create_or_update(individual_provisioning_model)
 
 
-def assert_device_provisioned(device_id):
+def assert_device_provisioned(device_id, registration_result):
     """
-    Assert that the device has been provisioned correctly to iothub.
+    Assert that the device has been provisioned correctly to iothub from the registration result as well as from the device registry
     :param device_id: The device id
+    :param registration_result: The registration result
     """
-    device = device_registry_helper.get_device(device_id)
+    assert registration_result.status == "assigned"
+    assert registration_result.registration_state.device_id == device_id
+    assert registration_result.registration_state.assigned_hub == linked_iot_hub
 
+    device = device_registry_helper.get_device(device_id)
     assert device is not None
     assert device.authentication.type == "sas"
     assert device.device_id == device_id
