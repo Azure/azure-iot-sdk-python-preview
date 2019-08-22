@@ -61,9 +61,7 @@ def test_device_register_with_device_id_for_a_symmetric_key_individual_enrollmen
         registration_result = result_from_register(registration_id, symmetric_key)
 
         assert device_id != registration_id
-        assert_device_provisioned(
-            device_id=registration_id, registration_result=registration_result
-        )
+        assert_device_provisioned(device_id=device_id, registration_result=registration_result)
     finally:
         service_client.delete_individual_enrollment_by_param(registration_id)
 
