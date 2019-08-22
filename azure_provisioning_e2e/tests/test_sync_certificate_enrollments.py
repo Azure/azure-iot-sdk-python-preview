@@ -40,6 +40,15 @@ PROVISIONING_HOST = os.getenv("PROVISIONING_DEVICE_ENDPOINT")
 ID_SCOPE = os.getenv("PROVISIONING_DEVICE_IDSCOPE")
 
 
+certificate_count = 8
+type_to_device_indices = {
+    "individual_with_device_id": [1],
+    "individual_no_device_id": [2],
+    "group_intermediate": [3, 4, 5],
+    "group_ca": [6, 7, 8],
+}
+
+
 @pytest.fixture(scope="module")
 def before_all_tests(request):
     logging.info("set up certificates before cert related tests")
@@ -52,7 +61,7 @@ def before_all_tests(request):
         common_name=device_common_name,
         intermediate_password=intermediate_password,
         device_password=device_password,
-        device_count=8,
+        device_count=certificate_count,
     )
 
     def after_module():
@@ -67,7 +76,7 @@ def before_all_tests(request):
 )
 def test_device_register_with_device_id_for_a_x509_individual_enrollment(before_all_tests):
     device_id = "e2edpsflyingfeather"
-    device_index = 1
+    device_index = type_to_device_indices.get("individual_with_device_id")[0]
 
     try:
         individual_enrollment_record = create_individual_enrollment_with_x509_client_certs(
@@ -79,6 +88,7 @@ def test_device_register_with_device_id_for_a_x509_individual_enrollment(before_
         device_key_file = "demoCA/private/device_key" + str(device_index) + ".pem"
         result_from_register(registration_id, device_cert_file, device_key_file)
 
+        assert device_id != registration_id
         assert_device_provisioned(device_id)
     finally:
         service_client.delete_individual_enrollment_by_param(registration_id)
@@ -88,8 +98,7 @@ def test_device_register_with_device_id_for_a_x509_individual_enrollment(before_
     "A device gets provisioned to the linked IoTHub with device_id equal to the registration_id of the individual enrollment that has been created with a selfsigned X509 authentication"
 )
 def test_device_register_with_no_device_id_for_a_x509_individual_enrollment(before_all_tests):
-
-    device_index = 2
+    device_index = type_to_device_indices.get("individual_no_device_id")[0]
 
     try:
         individual_enrollment_record = create_individual_enrollment_with_x509_client_certs(
@@ -114,7 +123,8 @@ def test_group_of_devices_register_with_no_device_id_for_a_x509_intermediate_aut
 ):
     group_id = "e2e-intermediate-hogwarts"
     common_device_id = device_common_name
-    device_count_in_group = 3
+    devices_indices = type_to_device_indices.get("group_intermediate")
+    device_count_in_group = len(devices_indices)
     reprovision_policy = ReprovisionPolicy(migrate_device_data=True)
 
     try:
@@ -135,7 +145,8 @@ def test_group_of_devices_register_with_no_device_id_for_a_x509_intermediate_aut
         common_device_key_input_file = "demoCA/private/device_key"
         common_device_cert_input_file = "demoCA/newcerts/device_cert"
         common_device_inter_cert_chain_file = "demoCA/newcerts/out_inter_device_chain_cert"
-        for index in range(3, 3 + device_count_in_group):
+        # for index in range(3, 3 + device_count_in_group):
+        for index in devices_indices:
             count = count + 1
             device_id = common_device_id + str(index)
             device_key_input_file = common_device_key_input_file + str(index) + ".pem"
@@ -173,7 +184,8 @@ def test_group_of_devices_register_with_no_device_id_for_a_x509_ca_authenticatio
 ):
     group_id = "e2e-ca-beauxbatons"
     common_device_id = device_common_name
-    device_count_in_group = 3
+    devices_indices = type_to_device_indices.get("group_ca")
+    device_count_in_group = len(devices_indices)
     reprovision_policy = ReprovisionPolicy(migrate_device_data=True)
 
     try:
@@ -192,7 +204,7 @@ def test_group_of_devices_register_with_no_device_id_for_a_x509_ca_authenticatio
         common_device_key_input_file = "demoCA/private/device_key"
         common_device_cert_input_file = "demoCA/newcerts/device_cert"
         common_device_inter_cert_chain_file = "demoCA/newcerts/out_inter_device_chain_cert"
-        for index in range(6, 6 + device_count_in_group):
+        for index in devices_indices:
             count = count + 1
             device_id = common_device_id + str(index)
             device_key_input_file = common_device_key_input_file + str(index) + ".pem"

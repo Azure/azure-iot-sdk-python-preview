@@ -39,6 +39,14 @@ device_registry_helper = Helper(os.getenv("IOTHUB_CONNECTION_STRING"))
 PROVISIONING_HOST = os.getenv("PROVISIONING_DEVICE_ENDPOINT")
 ID_SCOPE = os.getenv("PROVISIONING_DEVICE_IDSCOPE")
 
+certificate_count = 8
+type_to_device_indices = {
+    "individual_with_device_id": [1],
+    "individual_no_device_id": [2],
+    "group_intermediate": [3, 4, 5],
+    "group_ca": [6, 7, 8],
+}
+
 
 @pytest.fixture(scope="module")
 def before_all_tests(request):
@@ -67,7 +75,7 @@ def before_all_tests(request):
 )
 async def test_device_register_with_device_id_for_a_x509_individual_enrollment(before_all_tests):
     device_id = "e2edpsthunderbolt"
-    device_index = 1
+    device_index = type_to_device_indices.get("individual_with_device_id")[0]
 
     try:
         individual_enrollment_record = create_individual_enrollment_with_x509_client_certs(
@@ -88,8 +96,7 @@ async def test_device_register_with_device_id_for_a_x509_individual_enrollment(b
     "A device gets provisioned to the linked IoTHub with device_id equal to the registration_id of the individual enrollment that has been created with a selfsigned X509 authentication"
 )
 async def test_device_register_with_no_device_id_for_a_x509_individual_enrollment(before_all_tests):
-
-    device_index = 2
+    device_index = type_to_device_indices.get("individual_no_device_id")[0]
 
     try:
         individual_enrollment_record = create_individual_enrollment_with_x509_client_certs(
@@ -114,7 +121,8 @@ async def test_group_of_devices_register_with_no_device_id_for_a_x509_intermedia
 ):
     group_id = "e2e-intermediate-durmstrang"
     common_device_id = device_common_name
-    device_count_in_group = 3
+    devices_indices = type_to_device_indices.get("group_intermediate")
+    device_count_in_group = len(devices_indices)
     reprovision_policy = ReprovisionPolicy(migrate_device_data=True)
 
     try:
@@ -135,7 +143,7 @@ async def test_group_of_devices_register_with_no_device_id_for_a_x509_intermedia
         common_device_key_input_file = "demoCA/private/device_key"
         common_device_cert_input_file = "demoCA/newcerts/device_cert"
         common_device_inter_cert_chain_file = "demoCA/newcerts/out_inter_device_chain_cert"
-        for index in range(3, 3 + device_count_in_group):
+        for index in devices_indices:
             count = count + 1
             device_id = common_device_id + str(index)
             device_key_input_file = common_device_key_input_file + str(index) + ".pem"
@@ -173,7 +181,8 @@ async def test_group_of_devices_register_with_no_device_id_for_a_x509_ca_authent
 ):
     group_id = "e2e-ca-ilvermorny"
     common_device_id = device_common_name
-    device_count_in_group = 3
+    devices_indices = type_to_device_indices.get("group_ca")
+    device_count_in_group = len(devices_indices)
     reprovision_policy = ReprovisionPolicy(migrate_device_data=True)
 
     try:
@@ -192,7 +201,7 @@ async def test_group_of_devices_register_with_no_device_id_for_a_x509_ca_authent
         common_device_key_input_file = "demoCA/private/device_key"
         common_device_cert_input_file = "demoCA/newcerts/device_cert"
         common_device_inter_cert_chain_file = "demoCA/newcerts/out_inter_device_chain_cert"
-        for index in range(6, 6 + device_count_in_group):
+        for index in devices_indices:
             count = count + 1
             device_id = common_device_id + str(index)
             device_key_input_file = common_device_key_input_file + str(index) + ".pem"
