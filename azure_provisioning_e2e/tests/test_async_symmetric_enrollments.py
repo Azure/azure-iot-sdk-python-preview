@@ -4,8 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
-import time
-from azure_provisioning_e2e.iothubservice20180630.service_helper import Helper
+from azure_provisioning_e2e.service_helper import Helper
 from azure.iot.device.aio import ProvisioningDeviceClient
 from provisioningserviceclient import ProvisioningServiceClient, IndividualEnrollment
 from provisioningserviceclient.protocol.models import AttestationMechanism, ReprovisionPolicy

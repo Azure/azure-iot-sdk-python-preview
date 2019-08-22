@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from azure_provisioning_e2e.iothubservice20180630.service_helper import Helper
+from azure_provisioning_e2e.service_helper import Helper
 from azure.iot.device import ProvisioningDeviceClient
 from azure.iot.device.common import X509
 from provisioningserviceclient import (
@@ -13,7 +13,6 @@ from provisioningserviceclient import (
     EnrollmentGroup,
 )
 from provisioningserviceclient.protocol.models import AttestationMechanism, ReprovisionPolicy
-from provisioningserviceclient.protocol.models import X509Attestation, X509CAReferences
 import pytest
 import logging
 import os

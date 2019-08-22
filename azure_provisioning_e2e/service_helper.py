@@ -9,7 +9,7 @@ from azure_provisioning_e2e.iothubservice20180630.iot_hub_gateway_service_ap_is2
 )
 
 from msrest.exceptions import HttpOperationError
-from azure_provisioning_e2e.iothubservice20180630 import connection_string
+from azure_provisioning_e2e import connection_string
 
 import uuid
 import time

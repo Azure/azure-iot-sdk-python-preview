@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from azure_provisioning_e2e.iothubservice20180630.service_helper import Helper
+from azure_provisioning_e2e.service_helper import Helper
 from azure.iot.device.aio import ProvisioningDeviceClient
 from azure.iot.device.common import X509
 from provisioningserviceclient import (

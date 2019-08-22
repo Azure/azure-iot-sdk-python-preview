@@ -36,25 +36,6 @@ def connection_string_to_dictionary(str):
     return cn
 
 
-#
-#
-# def dictionary_to_connection_string(cn):
-#     """
-#     given a dictionary of name/value a pairs, make a connection string
-#     """
-#     return ";".join({"{}={}".format(key, value) for (key, value) in cn.items()})
-#
-#
-# def obfuscate_connection_string(str):
-#     """
-#     obfuscate a connection_string for outputting to a log
-#     """
-#     cn = connection_string_to_dictionary(str)
-#     for key in cn.keys():
-#         cn[key] = "<REDACTED>"
-#     return dictionary_to_connection_string(cn)
-
-
 def connection_string_to_sas_token(str):
     """
     parse an IoTHub service connection string and return the host and a shared access
