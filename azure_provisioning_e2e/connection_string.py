@@ -50,18 +50,16 @@ def connection_string_to_dictionary(str):
 #     return {"host": cn["HostName"], "sas": sas}
 
 
-def connection_string_to_sas_token(str):
+def connection_string_to_sas_token(conn_str_obj):
     """
     parse an IoTHub service connection string and return the host and a shared access
     signature that can be used to connect to the given hub
     """
-    conn_str = ConnectionString(str)
+    conn_str_obj = ConnectionString(conn_str_obj)
     sas_token = SasToken(
-        uri=conn_str.get("HostName"),
-        key=conn_str.get("SharedAccessKey"),
-        key_name=conn_str.get("SharedAccessKeyName"),
+        uri=conn_str_obj.get("HostName"),
+        key=conn_str_obj.get("SharedAccessKey"),
+        key_name=conn_str_obj.get("SharedAccessKeyName"),
     )
-    # sas = generate_auth_token(
-    #     conn_str.get["HostName"], conn_str.get["SharedAccessKeyName"], conn_str.get["SharedAccessKey"] + "="
-    # )
-    return {"host": conn_str.get("HostName"), "sas": str(sas_token)}
+
+    return {"host": conn_str_obj.get("HostName"), "sas": str(sas_token)}
