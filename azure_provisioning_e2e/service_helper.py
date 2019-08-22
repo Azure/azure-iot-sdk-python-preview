@@ -9,8 +9,8 @@ from azure_provisioning_e2e.iothubservice20180630.iot_hub_gateway_service_ap_is2
 )
 
 from msrest.exceptions import HttpOperationError
-from azure_provisioning_e2e import connection_string
-
+from azure.iot.device.common.connection_string import ConnectionString
+from azure.iot.device.common.sastoken import SasToken
 import uuid
 import time
 import random
@@ -18,6 +18,21 @@ import random
 max_failure_count = 5
 
 initial_backoff = 10
+
+
+def connection_string_to_sas_token(conn_str):
+    """
+    parse an IoTHub service connection string and return the host and a shared access
+    signature that can be used to connect to the given hub
+    """
+    conn_str_obj = ConnectionString(conn_str)
+    sas_token = SasToken(
+        uri=conn_str_obj.get("HostName"),
+        key=conn_str_obj.get("SharedAccessKey"),
+        key_name=conn_str_obj.get("SharedAccessKeyName"),
+    )
+
+    return {"host": conn_str_obj.get("HostName"), "sas": str(sas_token)}
 
 
 def run_with_retry(fun, args, kwargs):
@@ -46,7 +61,7 @@ def run_with_retry(fun, args, kwargs):
 
 class Helper:
     def __init__(self, service_connection_string):
-        self.cn = connection_string.connection_string_to_sas_token(service_connection_string)
+        self.cn = connection_string_to_sas_token(service_connection_string)
         self.service = IotHubGatewayServiceAPIs20180630("https://" + self.cn["host"]).service
 
     def headers(self):
