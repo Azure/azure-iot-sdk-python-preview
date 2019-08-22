@@ -118,9 +118,7 @@ def test_device_register_with_no_device_id_for_a_x509_individual_enrollment():
 @pytest.mark.it(
     "A group of devices get provisioned to the linked IoTHub with device_ids equal to the individual registration_ids inside a group enrollment that has been created with intermediate X509 authentication"
 )
-def test_group_of_devices_register_with_no_device_id_for_a_x509_intermediate_authentication_group_enrollment(
-    before_all_tests
-):
+def test_group_of_devices_register_with_no_device_id_for_a_x509_intermediate_authentication_group_enrollment():
     group_id = "e2e-intermediate-hogwarts"
     common_device_id = device_common_name
     devices_indices = type_to_device_indices.get("group_intermediate")
@@ -179,9 +177,7 @@ def test_group_of_devices_register_with_no_device_id_for_a_x509_intermediate_aut
 @pytest.mark.it(
     "A group of devices get provisioned to the linked IoTHub with device_ids equal to the individual registration_ids inside a group enrollment that has been created with an already uploaded ca cert X509 authentication"
 )
-def test_group_of_devices_register_with_no_device_id_for_a_x509_ca_authentication_group_enrollment(
-    before_all_tests
-):
+def test_group_of_devices_register_with_no_device_id_for_a_x509_ca_authentication_group_enrollment():
     group_id = "e2e-ca-beauxbatons"
     common_device_id = device_common_name
     devices_indices = type_to_device_indices.get("group_ca")
