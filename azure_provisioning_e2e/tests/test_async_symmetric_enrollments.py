@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from azure_provisioning_e2e.service_helper import Helper
+from azure_provisioning_e2e.service_helper import Helper, connection_string_to_hostname
 from azure.iot.device.aio import ProvisioningDeviceClient
 from provisioningserviceclient import ProvisioningServiceClient, IndividualEnrollment
 from provisioningserviceclient.protocol.models import AttestationMechanism, ReprovisionPolicy
@@ -25,6 +25,7 @@ service_client = ProvisioningServiceClient.create_from_connection_string(
 )
 service_client = ProvisioningServiceClient.create_from_connection_string(conn_str)
 device_registry_helper = Helper(os.getenv("IOTHUB_CONNECTION_STRING"))
+linked_iot_hub = connection_string_to_hostname(os.getenv("IOTHUB_CONNECTION_STRING"))
 
 
 @pytest.mark.it(
@@ -37,8 +38,11 @@ async def test_device_register_with_no_device_id_for_a_symmetric_key_individual_
         registration_id = individual_enrollment_record.registration_id
         symmetric_key = individual_enrollment_record.attestation.symmetric_key.primary_key
 
-        await result_from_register(registration_id, symmetric_key)
+        registration_result = await result_from_register(registration_id, symmetric_key)
 
+        assert registration_result.status == "assigned"
+        assert registration_result.registration_state.device_id == registration_id
+        assert registration_result.registration_state.assigned_hub == linked_iot_hub
         assert_device_provisioned(device_id=registration_id)
     finally:
         service_client.delete_individual_enrollment_by_param(registration_id)
@@ -58,8 +62,11 @@ async def test_device_register_with_device_id_for_a_symmetric_key_individual_enr
         registration_id = individual_enrollment_record.registration_id
         symmetric_key = individual_enrollment_record.attestation.symmetric_key.primary_key
 
-        await result_from_register(registration_id, symmetric_key)
+        registration_result = await result_from_register(registration_id, symmetric_key)
 
+        assert registration_result.status == "assigned"
+        assert registration_result.registration_state.device_id == registration_id
+        assert registration_result.registration_state.assigned_hub == linked_iot_hub
         assert_device_provisioned(device_id=device_id)
     finally:
         service_client.delete_individual_enrollment_by_param(registration_id)
@@ -106,4 +113,4 @@ async def result_from_register(registration_id, symmetric_key):
         symmetric_key=symmetric_key,
     )
 
-    await provisioning_device_client.register()
+    return await provisioning_device_client.register()

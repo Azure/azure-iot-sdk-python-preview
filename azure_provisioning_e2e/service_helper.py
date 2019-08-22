@@ -35,6 +35,15 @@ def connection_string_to_sas_token(conn_str):
     return {"host": conn_str_obj.get("HostName"), "sas": str(sas_token)}
 
 
+def connection_string_to_hostname(conn_str):
+    """
+    Retrieves only the hostname from connection string.
+    This will eventually give us the Linked IoT Hub
+    """
+    conn_str_obj = ConnectionString(conn_str)
+    return conn_str_obj.get("HostName")
+
+
 def run_with_retry(fun, args, kwargs):
     failures_left = max_failure_count
     retry = True
