@@ -64,4 +64,4 @@ def connection_string_to_sas_token(str):
     # sas = generate_auth_token(
     #     conn_str.get["HostName"], conn_str.get["SharedAccessKeyName"], conn_str.get["SharedAccessKey"] + "="
     # )
-    return {"host": conn_str("HostName"), "sas": str(sas_token)}
+    return {"host": conn_str.get("HostName"), "sas": str(sas_token)}
