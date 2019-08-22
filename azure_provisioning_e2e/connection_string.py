@@ -9,6 +9,8 @@ import hmac
 import hashlib
 import time
 import base64
+from azure.iot.device.common.connection_string import ConnectionString
+from azure.iot.device.common.sastoken import SasToken
 
 
 def generate_auth_token(uri, sas_name, sas_value):
@@ -36,13 +38,30 @@ def connection_string_to_dictionary(str):
     return cn
 
 
+# def connection_string_to_sas_token(str):
+#     """
+#     parse an IoTHub service connection string and return the host and a shared access
+#     signature that can be used to connect to the given hub
+#     """
+#     cn = connection_string_to_dictionary(str)
+#     sas = generate_auth_token(
+#         cn["HostName"], cn["SharedAccessKeyName"], cn["SharedAccessKey"] + "="
+#     )
+#     return {"host": cn["HostName"], "sas": sas}
+
+
 def connection_string_to_sas_token(str):
     """
     parse an IoTHub service connection string and return the host and a shared access
     signature that can be used to connect to the given hub
     """
-    cn = connection_string_to_dictionary(str)
-    sas = generate_auth_token(
-        cn["HostName"], cn["SharedAccessKeyName"], cn["SharedAccessKey"] + "="
+    conn_str = ConnectionString(str)
+    sas_token = SasToken(
+        uri=conn_str.get["HostName"],
+        key=conn_str.get["SharedAccessKey"],
+        key_name=conn_str.get["SharedAccessKeyName"],
     )
-    return {"host": cn["HostName"], "sas": sas}
+    # sas = generate_auth_token(
+    #     conn_str.get["HostName"], conn_str.get["SharedAccessKeyName"], conn_str.get["SharedAccessKey"] + "="
+    # )
+    return {"host": conn_str["HostName"], "sas": str(sas_token)}
