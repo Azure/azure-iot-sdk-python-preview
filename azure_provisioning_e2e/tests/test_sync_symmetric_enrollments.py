@@ -40,6 +40,7 @@ def test_device_register_with_no_device_id_for_a_symmetric_key_individual_enroll
         assert_device_provisioned(
             device_id=registration_id, registration_result=registration_result
         )
+        device_registry_helper.try_delete_device(registration_id)
     finally:
         service_client.delete_individual_enrollment_by_param(registration_id)
 
@@ -62,6 +63,7 @@ def test_device_register_with_device_id_for_a_symmetric_key_individual_enrollmen
 
         assert device_id != registration_id
         assert_device_provisioned(device_id=device_id, registration_result=registration_result)
+        device_registry_helper.try_delete_device(device_id)
     finally:
         service_client.delete_individual_enrollment_by_param(registration_id)
 

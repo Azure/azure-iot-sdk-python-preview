@@ -94,6 +94,7 @@ async def test_device_register_with_device_id_for_a_x509_individual_enrollment()
 
         assert device_id != registration_id
         assert_device_provisioned(device_id=device_id, registration_result=registration_result)
+        device_registry_helper.try_delete_device(device_id)
     finally:
         service_client.delete_individual_enrollment_by_param(registration_id)
 
@@ -119,6 +120,7 @@ async def test_device_register_with_no_device_id_for_a_x509_individual_enrollmen
         assert_device_provisioned(
             device_id=registration_id, registration_result=registration_result
         )
+        device_registry_helper.try_delete_device(registration_id)
     finally:
         service_client.delete_individual_enrollment_by_param(registration_id)
 
@@ -170,6 +172,7 @@ async def test_group_of_devices_register_with_no_device_id_for_a_x509_intermedia
             )
 
             assert_device_provisioned(device_id=device_id, registration_result=registration_result)
+            device_registry_helper.try_delete_device(device_id)
 
         # Make sure space is okay. The following line must be outside for loop.
         assert count == device_count_in_group
@@ -229,6 +232,7 @@ async def test_group_of_devices_register_with_no_device_id_for_a_x509_ca_authent
             )
 
             assert_device_provisioned(device_id=device_id, registration_result=registration_result)
+            device_registry_helper.try_delete_device(device_id)
 
         # Make sure space is okay. The following line must be outside for loop.
         assert count == device_count_in_group
