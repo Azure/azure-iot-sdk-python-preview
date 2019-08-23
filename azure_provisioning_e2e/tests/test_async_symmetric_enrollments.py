@@ -66,10 +66,10 @@ async def test_device_register_with_device_id_for_a_symmetric_key_individual_enr
 
         assert device_id != registration_id
         assert_device_provisioned(device_id=device_id, registration_result=registration_result)
-        # device_registry_helper.try_delete_device(device_id)
+        device_registry_helper.try_delete_device(device_id)
     finally:
         pass
-        # service_client.delete_individual_enrollment_by_param(registration_id)
+        service_client.delete_individual_enrollment_by_param(registration_id)
 
 
 def create_individual_enrollment(registration_id, device_id=None):
