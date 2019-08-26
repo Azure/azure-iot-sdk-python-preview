@@ -112,11 +112,30 @@ def create_verification_cert(
         print("Done generating verification certificate. Upload to IoT Hub to verify")
 
 
-def create_directories_and_prereq_files():
-    # os.system("type nul > demoCA/index.txt")
-    # os.system("type nul > demoCA/index.txt.attr")
-    os.system("touch demoCA/index.txt")
-    # os.system("touch demoCA/index.txt.attr")
+def create_directories_and_prereq_files(pipeline):
+    if pipeline:
+        os.system("touch demoCA/index.txt")
+        # TODO Do we need this
+        # os.system("touch demoCA/index.txt.attr")
+    else:
+
+        os.system("type nul > demoCA/index.txt")
+        # TODO Do we need this
+        # os.system("type nul > demoCA/index.txt.attr")
+    # command_index = [
+    #     "touch",
+    #     "demoCA/index.txt",
+    # ]
+
+    # run_index = subprocess.run(
+    #     command_index, universal_newlines=True, stdout=subprocess.PIPE,
+    #     stderr=subprocess.PIPE
+    # )
+
+    # print(run_index.stdout)
+    # print(run_index.stderr)
+    # print(run_index.returncode)
+
     os.system("echo 1000 > demoCA/serial")
     # Create this folder as configuration file makes new keys go here
     os.mkdir("demoCA/private")
@@ -124,39 +143,102 @@ def create_directories_and_prereq_files():
     os.mkdir("demoCA/newcerts")
 
 
-def create_root(common_name, ca_password="hogwarts", key_size=4096, days=3650):
-    os.system(
-        "openssl genrsa -aes256 -out demoCA/private/ca_key.pem -passout pass:"
-        + ca_password
-        + " "
-        + str(key_size)
+def create_root(common_name, ca_password, key_size=4096, days=3650):
+    # os.system(
+    #     "openssl genrsa -aes256 -out demoCA/private/ca_key.pem -passout pass:"
+    #     + ca_password
+    #     + " "
+    #     + str(key_size)
+    # )
+
+    command_root_key = [
+        "openssl",
+        "genrsa",
+        "-aes256",
+        "-out",
+        "demoCA/private/ca_key.pem",
+        "-passout",
+        "pass:" + ca_password,
+        str(key_size),
+    ]
+
+    run_root_key = subprocess.run(
+        command_root_key, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
-    print("Done generating root key")
+
+    print(run_root_key.stdout)
+    print(run_root_key.stderr)
+    print(run_root_key.returncode)
+
+    if os.path.exists("demoCA/private/ca_key.pem"):
+        print("Done generating root key")
+    else:
+        print("root key NOT generated")
+
     # We need another argument like country as there is always error regarding the first argument
     # Subject Attribute /C has no known NID, skipped
     # So if the first arg is common name the error comes due to common name nad common name is not taken
 
-    subject = "//C=US/CN=" + common_name
-    os.system(
-        "openssl req -config demoCA/openssl.cnf -key demoCA/private/ca_key.pem -passin pass:"
-        + ca_password
-        + " "
-        + "-new -x509 -days "
-        + str(days)
-        + " -sha256 -extensions v3_ca -out demoCA/newcerts/ca_cert.pem -subj "
-        + subject
+    subject = "/CN=" + common_name
+    # os.system(
+    #     "openssl req -config demoCA/openssl.cnf -key demoCA/private/ca_key.pem -passin pass:"
+    #     + ca_password
+    #     + " "
+    #     + "-new -x509 -days "
+    #     + str(days)
+    #     + " -sha256 -extensions v3_ca -out demoCA/newcerts/ca_cert.pem -subj "
+    #     + subject
+    # )
+
+    command_root_cert = [
+        "openssl",
+        "req",
+        "-config",
+        "demoCA/openssl.cnf",
+        "-key",
+        "demoCA/private/ca_key.pem",
+        "-passin",
+        "pass:" + ca_password,
+        "-new",
+        "-x509",
+        "-days",
+        str(days),
+        "-sha256",
+        "-extensions",
+        "v3_ca",
+        "-out",
+        "demoCA/newcerts/ca_cert.pem",
+        "-subj",
+        subject,
+    ]
+
+    run_root_cert = subprocess.run(
+        command_root_cert, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
-    print("Done generating root certificate")
+
+    print(run_root_cert.stdout)
+    print(run_root_cert.stderr)
+    print(run_root_cert.returncode)
+
+    if os.path.exists("demoCA/newcerts/ca_cert.pem"):
+        print("Done generating root cert")
+    else:
+        print("root cert NOT generated")
 
 
 def create_intermediate(
-    common_name,
-    pipeline,
-    ca_password="hogwarts",
-    intermediate_password="hogwartsi",
-    key_size=4096,
-    days=365,
+    common_name, pipeline, ca_password, intermediate_password, key_size=4096, days=365
 ):
+    """
+    This method will create an intermediate key, then an intermediate certificate request and finally an intermediate certificate.
+    :param common_name: The common name to be used in the subject.
+    :param pipeline: A boolean variable representing whether this script is being run in Azure Dev Ops pipeline or not.
+    When this function is called from Azure Dev Ops this variable is True otherwise False
+    :param ca_password: The password for the root certificate which is going to be referenced by the intermediate.
+    :param intermediate_password: The password for the intermediate certificate
+    :param key_size: The key size to use for encryption. Default is 4096.
+    :param days: The number of days for which the certificate is valid. Default is 1 year (365 days)
+    """
 
     if pipeline:
         ca_cert = os.getenv("PROVISIONING_ROOT_CERT")
@@ -179,36 +261,85 @@ def create_intermediate(
                 print("root key decoded and created")
             else:
                 print("root key NOT decoded and created")
+        # subject = "/CN=" + common_name
     else:
         in_cert_file_path = "demoCA/newcerts/ca_cert.pem"
         in_key_file_path = "demoCA/private/ca_key.pem"
 
-    os.system(
-        "openssl genrsa -aes256 -out demoCA/private/intermediate_key.pem -passout pass:"
-        + intermediate_password
-        + " "
-        + str(key_size)
+    command_intermediate_key = [
+        "openssl",
+        "genrsa",
+        "-aes256",
+        "-out",
+        "demoCA/private/intermediate_key.pem",
+        "-passout",
+        "pass:" + intermediate_password,
+        str(key_size),
+    ]
+
+    run_intermediate_key = subprocess.run(
+        command_intermediate_key,
+        universal_newlines=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
+    print(run_intermediate_key.stdout)
+    print(run_intermediate_key.stderr)
+    print(run_intermediate_key.returncode)
+
+    # os.system(
+    #     "openssl genrsa -aes256 -out demoCA/private/intermediate_key.pem -passout pass:"
+    #     + intermediate_password
+    #     + " "
+    #     + str(key_size)
+    # )
     if os.path.exists("demoCA/private/intermediate_key.pem"):
         print("Done generating intermediate key")
     else:
         print("intermediate key NOT generated")
 
     subject = "/CN=" + common_name
-    os.system(
-        "openssl req -config demoCA/openssl.cnf -key demoCA/private/intermediate_key.pem -passin pass:"
-        + intermediate_password
-        + " "
-        + "-new -sha256 -out demoCA/newcerts/intermediate_csr.pem -subj "
-        + subject
+    command_intermediate_csr = [
+        "openssl",
+        "req",
+        "-config",
+        "demoCA/openssl.cnf",
+        "-key",
+        "demoCA/private/intermediate_key.pem",
+        "-passin",
+        "pass:" + intermediate_password,
+        "-new",
+        "-sha256",
+        "-out",
+        "demoCA/newcerts/intermediate_csr.pem",
+        "-subj",
+        subject,
+    ]
+
+    run_intermediate_csr = subprocess.run(
+        command_intermediate_csr,
+        universal_newlines=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
+    print(run_intermediate_csr.stdout)
+    print(run_intermediate_csr.stderr)
+    print(run_intermediate_csr.returncode)
+
+    # os.system(
+    #     "openssl req -config demoCA/openssl.cnf -key demoCA/private/intermediate_key.pem -passin pass:"
+    #     + intermediate_password
+    #     + " "
+    #     + "-new -sha256 -out demoCA/newcerts/intermediate_csr.pem -subj "
+    #     + subject
+    # )
 
     if os.path.exists("demoCA/newcerts/intermediate_csr.pem"):
         print("Done generating intermediate CSR")
     else:
         print("intermediate csr NOT generated")
 
-    command = [
+    command_intermediate_cert = [
         "openssl",
         "ca",
         "-config",
@@ -233,12 +364,15 @@ def create_intermediate(
         "-batch",
     ]
 
-    cp = subprocess.run(
-        command, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    run_intermediate_cert = subprocess.run(
+        command_intermediate_cert,
+        universal_newlines=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
-    print(cp.stdout)
-    print(cp.stderr)
-    print(cp.returncode)
+    print(run_intermediate_cert.stdout)
+    print(run_intermediate_cert.stderr)
+    print(run_intermediate_cert.returncode)
 
     if os.path.exists("demoCA/newcerts/intermediate_cert.pem"):
         print("Done generating intermediate certificate")
@@ -249,17 +383,28 @@ def create_intermediate(
 def create_certificate_chain(
     common_name,
     ca_password,
-    intermediate_password="hogwartsi",
-    device_password="hogwartsd",
+    intermediate_password,
+    device_password,
     device_count=1,
-    pipeline=False,
     key_size=4096,
     days=365,
 ):
+    """
+    This method will create a basic 3 layered chain certificate containing a root, then an intermediate and then some count of leaf certificates.
+    :param common_name: The common name to be used in the subject. This common name will be applied to all certificates
+    prepended by the words "root", "inter" and "device" for root, intermediate and device certificates.
+    When root certificate is crated the common name will become "root"
+    :param ca_password: The password for the root certificate which is going to be referenced by the intermediate.
+    :param intermediate_password: The password for the intermediate certificate
+    :param device_password: The password for the device certificate
+    :param device_count: The number of leaf devices for which that many number of certifcates will be generated.
+    :param key_size: The key size to use for encryption. The default is 4096.
+    :param days: The number of days for which the certificate is valid. The default is 1 year or 365 days.
+    """
     common_name_for_root = "root" + common_name
     create_root(common_name_for_root, ca_password=ca_password, key_size=key_size, days=days * 10)
 
-    common_name_for_intermediate = "root" + common_name
+    common_name_for_intermediate = "inter" + common_name
     create_intermediate(
         common_name_for_intermediate,
         pipeline=False,
@@ -296,62 +441,139 @@ def create_leaf_certificates(
     csr_file_name = "device_csr" + str(index) + ".pem"
     cert_file_name = "device_cert" + str(index) + ".pem"
 
-    os.system(
-        "openssl genrsa -aes256 -out demoCA/private/"
-        + key_file_name
-        + " -passout pass:"
-        + device_password
-        + " "
-        + str(key_size)
+    # os.system(
+    #     "openssl genrsa -aes256 -out demoCA/private/"
+    #     + key_file_name
+    #     + " -passout pass:"
+    #     + device_password
+    #     + " "
+    #     + str(key_size)
+    # )
+
+    command_device_key = [
+        "openssl",
+        "genrsa",
+        "-aes256",
+        "-out",
+        "demoCA/private/" + key_file_name,
+        "-passout",
+        "pass:" + device_password,
+        str(key_size),
+    ]
+
+    run_device_key = subprocess.run(
+        command_device_key, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
+    print(run_device_key.stdout)
+    print(run_device_key.stderr)
+    print(run_device_key.returncode)
+
     if os.path.exists("demoCA/private/" + key_file_name):
         print("Done generating device key with filename {filename}".format(filename=key_file_name))
-        logging.debug(
-            "Done generating device key with filename {filename}".format(filename=key_file_name)
-        )
+        # logging.debug(
+        #     "Done generating device key with filename {filename}".format(filename=key_file_name)
+        # )
     else:
         print("device key NOT generated")
 
-    subject = "//C=US/CN=" + common_name_for_all_device + str(index)
-    os.system(
-        "openssl req -config demoCA/openssl.cnf -new -sha256 -key demoCA/private/"
-        + key_file_name
-        + " -passin pass:"
-        + device_password
-        + " "
-        + "-out demoCA/newcerts/"
-        + csr_file_name
-        + " -subj "
-        + subject
+    # subject = "//C=US/CN=" + common_name_for_all_device + str(index)
+
+    subject = "/CN=" + common_name_for_all_device + str(index)
+    # os.system(
+    #     "openssl req -config demoCA/openssl.cnf -new -sha256 -key demoCA/private/"
+    #     + key_file_name
+    #     + " -passin pass:"
+    #     + device_password
+    #     + " "
+    #     + "-out demoCA/newcerts/"
+    #     + csr_file_name
+    #     + " -subj "
+    #     + subject
+    # )
+    command_device_csr = [
+        "openssl",
+        "req",
+        "-config",
+        "demoCA/openssl.cnf",
+        "-key",
+        "demoCA/private/" + key_file_name,
+        "-passin",
+        "pass:" + device_password,
+        "-new",
+        "-sha256",
+        "-out",
+        "demoCA/newcerts/" + csr_file_name,
+        "-subj",
+        subject,
+    ]
+
+    run_device_csr = subprocess.run(
+        command_device_csr, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
+    print(run_device_csr.stdout)
+    print(run_device_csr.stderr)
+    print(run_device_csr.returncode)
+
     if os.path.exists("demoCA/newcerts/" + csr_file_name):
         print("Done generating device CSR with filename {filename}".format(filename=csr_file_name))
-        logging.debug(
-            "Done generating device CSR with filename {filename}".format(filename=csr_file_name)
-        )
+        # logging.debug(
+        #     "Done generating device CSR with filename {filename}".format(filename=csr_file_name)
+        # )
     else:
         print("device CSR NOT generated")
 
-    os.system(
-        "openssl ca -config demoCA/openssl.cnf -in demoCA/newcerts/"
-        + csr_file_name
-        + " -out demoCA/newcerts/"
-        + cert_file_name
-        + " -keyfile demoCA/private/intermediate_key.pem -cert demoCA/newcerts/intermediate_cert.pem -passin pass:"
-        + intermediate_password
-        + " "
-        + "-extensions usr_cert -days "
-        + str(days)
-        + " -notext -md sha256 -batch"
+    # os.system(
+    #     "openssl ca -config demoCA/openssl.cnf -in demoCA/newcerts/"
+    #     + csr_file_name
+    #     + " -out demoCA/newcerts/"
+    #     + cert_file_name
+    #     + " -keyfile demoCA/private/intermediate_key.pem -cert demoCA/newcerts/intermediate_cert.pem -passin pass:"
+    #     + intermediate_password
+    #     + " "
+    #     + "-extensions usr_cert -days "
+    #     + str(days)
+    #     + " -notext -md sha256 -batch"
+    # )
+
+    command_device_cert = [
+        "openssl",
+        "ca",
+        "-config",
+        "demoCA/openssl.cnf",
+        "-in",
+        "demoCA/newcerts/" + csr_file_name,
+        "-out",
+        "demoCA/newcerts/" + cert_file_name,
+        "-keyfile",
+        "demoCA/private/intermediate_key.pem",
+        "-cert",
+        "demoCA/newcerts/intermediate_cert.pem",
+        "-passin",
+        "pass:" + intermediate_password,
+        "-extensions",
+        "usr_cert",
+        "-days",
+        str(days),
+        "-notext",
+        "-md",
+        "sha256",
+        "-batch",
+    ]
+
+    run_device_cert = subprocess.run(
+        command_device_cert, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
+    print(run_device_cert.stdout)
+    print(run_device_cert.stderr)
+    print(run_device_cert.returncode)
 
     if os.path.exists("demoCA/newcerts/" + cert_file_name):
         print(
             "Done generating device cert with filename {filename}".format(filename=cert_file_name)
         )
-        logging.debug(
-            "Done generating device cert with filename {filename}".format(filename=cert_file_name)
-        )
+        # logging.debug(
+        #     "Done generating device cert with filename {filename}".format(filename=cert_file_name)
+        # )
     else:
         print("device cert NOT generated")
 
@@ -360,7 +582,7 @@ def call_intermediate_cert_creation_from_pipeline(
     common_name, ca_password, intermediate_password, key_size=4096, days=30
 ):
     os.system("mkdir demoCA")
-    create_directories_and_prereq_files()
+    create_directories_and_prereq_files(True)
 
     shutil.copy("config/openssl.cnf", "demoCA/openssl.cnf")
 
@@ -434,3 +656,12 @@ def call_device_cert_creation_from_pipeline(
             key_size=key_size,
             days=days,
         )
+
+
+if __name__ == "__main__":
+    # create_directories_and_prereq_files(False)
+    # create_root("crucio", "levicorpus")
+    # create_intermediate("avada3", pipeline=False, ca_password="levicorpus", intermediate_password="locomotor")
+    call_device_cert_creation_from_pipeline(
+        "kedavra", intermediate_password="locomotor", device_password="trunks", device_count=3
+    )
