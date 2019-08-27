@@ -117,7 +117,7 @@ def add_shims_for_inherited_methods(target_class):
             logger.info("exec: " + fn_def_cmdstr)
             exec(fn_def_cmdstr, shim_scope)
 
-            # Add function to leaf/child class as a method.
+            # Copy the docstring from the method to the shim function
             set_doc_cmdstr = "{method_name}.__doc__ = {leaf_class}.{method_name}.__doc__".format(
                 method_name=method_name, leaf_class=classname_alias
             )
