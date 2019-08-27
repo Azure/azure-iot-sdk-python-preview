@@ -137,5 +137,6 @@ def add_shims_for_inherited_methods(target_class):
             logger.info("exec: " + attach_shim_cmdstr)
             exec(attach_shim_cmdstr, shim_scope)
 
-    # NOTE: the __qualname__ attributes of these new shim methods point to THIS module, not the class itself.
+    # NOTE: the __qualname__ attributes of these new shim methods are merely the method name,
+    # rather than <class_name>.<method_name>, due to the scoping of the definition.
     # This shouldn't matter, but in case it does, I am documenting that fact here.
