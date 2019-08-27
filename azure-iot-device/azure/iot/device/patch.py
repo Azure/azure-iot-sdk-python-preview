@@ -11,6 +11,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# This dict will be used as a scope for imports and defs in add_shims_for_inherited_methods
+# in order to keep them out of the global scope of this module.
+shim_scope = {}
+
 
 # TODO: make this work for Python 2.7 and 3.4
 def add_shims_for_inherited_methods(target_class):
@@ -20,6 +24,9 @@ def add_shims_for_inherited_methods(target_class):
     These shim methods will include the same docstrings as the method from the parent class.
 
     This currently only works for Python 3.5+
+
+    Using INFO logging will allow you to see output of all dynamic operations that occur within
+    for debugging purposes.
 
     :param target_class: The child class to add shim methods to
     """
@@ -40,7 +47,7 @@ def add_shims_for_inherited_methods(target_class):
     # We must alias classnames to prevent naming collisions when this fn is called multiple times
     # with classes that share a name. If we've already used this classname, add trailing underscore(s)
     classname_alias = target_class.__name__
-    while classname_alias in globals():
+    while classname_alias in shim_scope:
         classname_alias += "_"
 
     # Import the class we're adding methods to, so that functions defined in this scope can use super()
@@ -49,7 +56,7 @@ def add_shims_for_inherited_methods(target_class):
         module=class_module.__name__, target_class=target_class.__name__, alias=classname_alias
     )
     logger.info("exec: " + import_cmdstr)
-    exec(import_cmdstr, globals())
+    exec(import_cmdstr, shim_scope)
 
     for method in all_methods:
         method_name = method[0]
@@ -97,7 +104,7 @@ def add_shims_for_inherited_methods(target_class):
                 def_syntax = "def"  # Define function/method
                 ret_syntax = "return"
 
-            # Dynamically define a new function, with the same name, that invokes the method of the parent class
+            # Dynamically define a new shim function, with the same name, that invokes the method of the parent class
             fn_def_cmdstr = "{def_syntax} {method_name}{signature}: {ret_syntax} super({leaf_class}, {object_or_type}).{method_name}{invocation}".format(
                 def_syntax=def_syntax,
                 method_name=method_name,
@@ -108,27 +115,27 @@ def add_shims_for_inherited_methods(target_class):
                 invocation=str(invoke_params),
             )
             logger.info("exec: " + fn_def_cmdstr)
-            exec(fn_def_cmdstr, globals())
+            exec(fn_def_cmdstr, shim_scope)
 
             # Add function to leaf/child class as a method.
-            set_doc_cmdstr = "{method_name}.__doc__ = method_obj.__doc__".format(
-                method_name=method_name
+            set_doc_cmdstr = "{method_name}.__doc__ = {leaf_class}.{method_name}.__doc__".format(
+                method_name=method_name, leaf_class=classname_alias
             )
             logger.info("exec: " + set_doc_cmdstr)
-            exec(set_doc_cmdstr)
+            exec(set_doc_cmdstr, shim_scope)
 
-            # Add as a classmethod if the method is a classmethod
+            # Add shim function to leaf/child class as a classmethod if the method being shimmed is a classmethod
             if inspect.ismethod(method_obj):
-                attach_shim_cmdstr = "setattr(target_class, method_name, classmethod({method_name}))".format(
-                    method_name=method_name
+                attach_shim_cmdstr = "setattr({leaf_class}, '{method_name}', classmethod({method_name}))".format(
+                    leaf_class=classname_alias, method_name=method_name
                 )
-            # Add regularly if the method is an instance method
+            # Add shim function to leaf/child class as a method if the method being shimmed is an instance method
             else:
-                attach_shim_cmdstr = "setattr(target_class, method_name, {method_name})".format(
-                    method_name=method_name
+                attach_shim_cmdstr = "setattr({leaf_class}, '{method_name}', {method_name})".format(
+                    leaf_class=classname_alias, method_name=method_name
                 )
             logger.info("exec: " + attach_shim_cmdstr)
-            exec(attach_shim_cmdstr)
+            exec(attach_shim_cmdstr, shim_scope)
 
     # NOTE: the __qualname__ attributes of these new shim methods point to THIS module, not the class itself.
     # This shouldn't matter, but in case it does, I am documenting that fact here.
