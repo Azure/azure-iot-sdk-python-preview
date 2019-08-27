@@ -72,7 +72,7 @@ def add_shims_for_inherited_methods(target_class):
             method_sig = inspect.signature(method_obj)
             sig_params = method_sig.parameters
 
-            # Bound methods (e.g. classmethods) remove the first parameter (e.g. cls)
+            # Bound methods (i.e. classmethods) remove the first parameter (i.e. cls)
             # so we need to add it back
             if inspect.ismethod(method_obj):
                 complete_params = []
