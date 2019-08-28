@@ -19,7 +19,7 @@ import os
 
 from scripts.create_x509_chain_pipeline import (
     call_intermediate_cert_creation_from_pipeline,
-    call_device_cert_creation_from_pipeline,
+    create_device_certs,
     delete_directories_certs_created_from_pipeline,
 )
 
@@ -59,7 +59,7 @@ def before_all_tests(request):
         ca_password=os.getenv("PROVISIONING_ROOT_PASSWORD"),
         intermediate_password=intermediate_password,
     )
-    call_device_cert_creation_from_pipeline(
+    create_device_certs(
         common_name=device_common_name,
         intermediate_password=intermediate_password,
         device_password=device_password,
