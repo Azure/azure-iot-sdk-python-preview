@@ -25,7 +25,7 @@ def add_shims_for_inherited_methods(target_class):
 
     This currently only works for Python 3.5+
 
-    Using INFO logging will allow you to see output of all dynamic operations that occur within
+    Using DEBUG logging will allow you to see output of all dynamic operations that occur within
     for debugging purposes.
 
     :param target_class: The child class to add shim methods to
@@ -55,7 +55,7 @@ def add_shims_for_inherited_methods(target_class):
     import_cmdstr = "from {module} import {target_class} as {alias}".format(
         module=class_module.__name__, target_class=target_class.__name__, alias=classname_alias
     )
-    logger.info("exec: " + import_cmdstr)
+    logger.debug("exec: " + import_cmdstr)
     exec(import_cmdstr, shim_scope)
 
     for method in all_methods:
@@ -114,14 +114,14 @@ def add_shims_for_inherited_methods(target_class):
                 object_or_type=obj_or_type,
                 invocation=str(invoke_params),
             )
-            logger.info("exec: " + fn_def_cmdstr)
+            logger.debug("exec: " + fn_def_cmdstr)
             exec(fn_def_cmdstr, shim_scope)
 
             # Copy the docstring from the method to the shim function
             set_doc_cmdstr = "{method_name}.__doc__ = {leaf_class}.{method_name}.__doc__".format(
                 method_name=method_name, leaf_class=classname_alias
             )
-            logger.info("exec: " + set_doc_cmdstr)
+            logger.debug("exec: " + set_doc_cmdstr)
             exec(set_doc_cmdstr, shim_scope)
 
             # Add shim function to leaf/child class as a classmethod if the method being shimmed is a classmethod
@@ -134,7 +134,7 @@ def add_shims_for_inherited_methods(target_class):
                 attach_shim_cmdstr = "setattr({leaf_class}, '{method_name}', {method_name})".format(
                     leaf_class=classname_alias, method_name=method_name
                 )
-            logger.info("exec: " + attach_shim_cmdstr)
+            logger.debug("exec: " + attach_shim_cmdstr)
             exec(attach_shim_cmdstr, shim_scope)
 
     # NOTE: the __qualname__ attributes of these new shim methods are merely the method name,
