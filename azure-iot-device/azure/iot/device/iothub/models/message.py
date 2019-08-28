@@ -61,6 +61,11 @@ class Message(object):
         return self._iothub_interface_id
 
     def set_as_security_message(self):
+        """
+        Set the message as a security message.
+
+        This is a provisional API. Functionality not yet guaranteed.
+        """
         self._iothub_interface_id = constant.SECURITY_MESSAGE_INTERFACE_ID
 
     def __str__(self):
