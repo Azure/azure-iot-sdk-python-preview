@@ -7,7 +7,7 @@
 import pytest
 import logging
 from azure.iot.device.iothub.models import Message
-from iot.device import constant
+from azure.iot.device import constant
 
 logging.basicConfig(level=logging.INFO)
 
