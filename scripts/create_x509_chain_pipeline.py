@@ -66,7 +66,41 @@ def create_custom_config():
 def create_verification_cert(nonce, root_verify, ca_password, intermediate_password, key_size=4096):
 
     print("Done generating verification key")
-    subject = "//C=US/CN=" + nonce
+    # subject = "//C=US/CN=" + nonce
+    subject = "/CN=" + nonce
+
+    if root_verify:
+        key_file = "demoCA/private/verification_root_key.pem"
+        # csr_file = "demoCA/newcerts/verification_root_csr.pem"
+        # cert_file = "demoCA/newcerts/verification_root_cert.pem"
+        # passphrase = ca_password
+    else:
+        key_file = "demoCA/private/verification_inter_key.pem"
+        # csr_file = "demoCA/newcerts/verification_inter_csr.pem"
+        # cert_file = "demoCA/newcerts/verification_inter_cert.pem"
+        # passphrase = intermediate_password
+
+    command_verification_key = ["openssl", "genrsa", "-out", key_file, str(key_size)]
+
+    run_verification_key = subprocess.run(
+        command_verification_key,
+        universal_newlines=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    print_subprocess_output(run_verification_key)
+
+    command_verification_csr = ["openssl", "req", "-key", "genrsa", "-out", key_file, str(key_size)]
+
+    run_verification_csr = subprocess.run(
+        command_verification_csr,
+        universal_newlines=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    print_subprocess_output(run_verification_csr)
 
     if not root_verify:
         os.system(
