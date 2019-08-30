@@ -1,0 +1,1 @@
+autorest --input-file=service.json --python --output-folder=azure\iot --add-credentials
