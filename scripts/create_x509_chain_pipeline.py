@@ -22,7 +22,8 @@ def create_custom_config():
     # The openssl config file extension could be "cfg" or "cnf"
 
     # config_path = os.getenv("OPENSSL_CONF")
-    config_path = "C:/OpenSSL-Win64/bin/openssl.cfg"
+    # config_path = "C:/OpenSSL-Win64/bin/openssl.cfg"
+    config_path = "/usr/local/etc/openssl/openssl.cnf"
     with open(config_path, "r") as openssl_config:
         config = openssl_config.read()
     lines = config.splitlines()
@@ -63,22 +64,27 @@ def create_custom_config():
         local_file.write("\n".join(list_of_lines) + "\n")
 
 
-def create_verification_cert(nonce, root_verify, ca_password, intermediate_password, key_size=4096):
+def create_verification_cert(nonce, root_verify, ca_password=None, intermediate_password=None, key_size=4096):
 
+    print(ca_password)
     print("Done generating verification key")
     # subject = "//C=US/CN=" + nonce
     subject = "/CN=" + nonce
 
     if root_verify:
         key_file = "demoCA/private/verification_root_key.pem"
-        # csr_file = "demoCA/newcerts/verification_root_csr.pem"
-        # cert_file = "demoCA/newcerts/verification_root_cert.pem"
-        # passphrase = ca_password
+        csr_file = "demoCA/newcerts/verification_root_csr.pem"
+        in_key_file = "demoCA/private/ca_key.pem"
+        in_cert_file = "demoCA/newcerts/ca_cert.pem"
+        out_cert_file = "demoCA/newcerts/verification_root_cert.pem"
+        passphrase = ca_password
     else:
         key_file = "demoCA/private/verification_inter_key.pem"
-        # csr_file = "demoCA/newcerts/verification_inter_csr.pem"
-        # cert_file = "demoCA/newcerts/verification_inter_cert.pem"
-        # passphrase = intermediate_password
+        csr_file = "demoCA/newcerts/verification_inter_csr.pem"
+        in_key_file = "demoCA/private/intermediate_key.pem"
+        in_cert_file = "demoCA/newcerts/intermediate_cert.pem"
+        out_cert_file = "demoCA/newcerts/verification_inter_cert.pem"
+        passphrase = intermediate_password
 
     command_verification_key = ["openssl", "genrsa", "-out", key_file, str(key_size)]
 
@@ -91,7 +97,7 @@ def create_verification_cert(nonce, root_verify, ca_password, intermediate_passw
 
     print_subprocess_output(run_verification_key)
 
-    command_verification_csr = ["openssl", "req", "-key", "genrsa", "-out", key_file, str(key_size)]
+    command_verification_csr = ["openssl", "req", "-key", key_file, "-new", "-out", csr_file, "-subj", subject]
 
     run_verification_csr = subprocess.run(
         command_verification_csr,
@@ -102,51 +108,29 @@ def create_verification_cert(nonce, root_verify, ca_password, intermediate_passw
 
     print_subprocess_output(run_verification_csr)
 
-    if not root_verify:
-        os.system(
-            "openssl genrsa -out demoCA/private/verification_inter_key.pem" + " " + str(key_size)
-        )
-        os.system(
-            "openssl req -key demoCA/private/verification_inter_key.pem"
-            + " "
-            + "-new -out demoCA/newcerts/verification_inter_csr.pem -subj "
-            + subject
-        )
-        print("Done generating verification CSR for intermediate")
+    command_verification_cert = ["openssl", "x509", "-req", "-in", csr_file, "-CA", in_cert_file, "-CAkey", in_key_file,
+                                 "-passin",
+                                 "pass:" + passphrase,
+                                 "-CAcreateserial",
+                                 "-out",
+                                 out_cert_file,
+                                 "-days",
+                                 str(30),
+                                 "-sha256"]
 
-        os.system(
-            "openssl x509 -req -in demoCA/newcerts/verification_inter_csr.pem"
-            + " "
-            + "-CA demoCA/newcerts/intermediate_cert.pem -CAkey demoCA/private/intermediate_key.pem -passin pass:"
-            + intermediate_password
-            + " "
-            + "-CAcreateserial -out demoCA/newcerts/verification_inter_cert.pem -days 300 -sha256"
-        )
-        print(
-            "Done generating verification certificate for intermediate. Upload to IoT Hub to verify"
-        )
+    run_verification_cert = subprocess.run(
+        command_verification_cert,
+        universal_newlines=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
 
-    else:
-        os.system(
-            "openssl genrsa -out demoCA/private/verification_root_key.pem" + " " + str(key_size)
-        )
-        os.system(
-            "openssl req -key demoCA/private/verification_root_key.pem"
-            + " "
-            + "-new -out demoCA/newcerts/verification_root_csr.pem -subj "
-            + subject
-        )
-        print("Done generating verification CSR")
+    print_subprocess_output(run_verification_cert)
 
-        os.system(
-            "openssl x509 -req -in demoCA/newcerts/verification_root_csr.pem"
-            + " "
-            + "-CA demoCA/newcerts/ca_cert.pem -CAkey demoCA/private/ca_key.pem -passin pass:"
-            + ca_password
-            + " "
-            + "-CAcreateserial -out demoCA/newcerts/verification_root_cert.pem -days 300 -sha256"
-        )
+    if os.path.exists(out_cert_file):
         print("Done generating verification certificate. Upload to IoT Hub to verify")
+    else:
+        print("verification cert NOT generated")
 
 
 def print_subprocess_output(run_command):
@@ -203,9 +187,6 @@ def create_root(common_name, ca_password, key_size=4096, days=3650):
     )
 
     print_subprocess_output(run_root_key)
-    # print(run_root_key.stdout)
-    # print(run_root_key.stderr)
-    # print(run_root_key.returncode)
 
     if os.path.exists("demoCA/private/ca_key.pem"):
         print("Done generating root key")
@@ -241,9 +222,6 @@ def create_root(common_name, ca_password, key_size=4096, days=3650):
     )
 
     print_subprocess_output(run_root_cert)
-    # print(run_root_cert.stdout)
-    # print(run_root_cert.stderr)
-    # print(run_root_cert.returncode)
 
     if os.path.exists("demoCA/newcerts/ca_cert.pem"):
         print("Done generating root cert")
@@ -307,9 +285,6 @@ def create_intermediate(
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
-    # print(run_intermediate_key.stdout)
-    # print(run_intermediate_key.stderr)
-    # print(run_intermediate_key.returncode)
 
     print_subprocess_output(run_intermediate_key)
 
@@ -342,9 +317,6 @@ def create_intermediate(
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
-    # print(run_intermediate_csr.stdout)
-    # print(run_intermediate_csr.stderr)
-    # print(run_intermediate_csr.returncode)
     print_subprocess_output(run_intermediate_csr)
 
     if os.path.exists("demoCA/newcerts/intermediate_csr.pem"):
@@ -383,9 +355,6 @@ def create_intermediate(
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
-    # print(run_intermediate_cert.stdout)
-    # print(run_intermediate_cert.stderr)
-    # print(run_intermediate_cert.returncode)
     print_subprocess_output(run_intermediate_cert)
 
     if os.path.exists("demoCA/newcerts/intermediate_cert.pem"):
@@ -441,7 +410,7 @@ def create_certificate_chain(
             intermediate_password=intermediate_password,
             device_password=device_password,
             key_size=key_size,
-            days=days / 10,
+            days=int(days/10),
         )
 
 
@@ -661,6 +630,14 @@ def delete_directories_certs_created_from_pipeline():
 
 
 if __name__ == "__main__":
+    # create_verification_cert("54A2F24C8103006551F640E05B028CFEE0CEFD9FCA7EA5CB", False, intermediate_password="hogwartsi")
+    # create_directories_and_prereq_files(False)
+    # create_custom_config()
+    # create_root("root", "hogwarts")
+    # create_intermediate("intermediate", False, "hogwarts", "hogwartsi")
+    # create_leaf_certificates(1, "device", "hogwartsi", "hogwartsd")
+    # create_certificate_chain("leviosa", "hogwarts", "hogwartsi", "hogwartsd")
+
     parser = argparse.ArgumentParser(description="Generate a certificate chain.")
     parser.add_argument("domain", help="Domain name or common name.")
     parser.add_argument(
@@ -720,9 +697,12 @@ if __name__ == "__main__":
     else:
         days = 30
 
+    ca_password = None
+    intermediate_password = None
     if args.mode:
         if args.mode == "verification":
             mode = "verification"
+            print("in verification mode")
         else:
             raise ValueError(
                 "No other mode except verification is accepted. Default is non-verification"
@@ -749,12 +729,15 @@ if __name__ == "__main__":
             device_count = 1
 
     else:
+        print("in verification mode")
         if args.nonce:
             nonce = args.nonce
+            print("got nonce")
         else:
             nonce = getpass.getpass("Enter nonce for verification mode")
         if args.root_verify:
             lower_root_verify = args.root_verify.lower()
+            print("root verify is False")
             if lower_root_verify == "false":
                 root_verify = False
                 if args.intermediate_password:
@@ -765,22 +748,29 @@ if __name__ == "__main__":
                     )
             else:
                 root_verify = True
+                print("root verify is TRue")
                 if args.ca_password:
                     ca_password = args.ca_password
+                    print("putting ca password")
                 else:
                     ca_password = getpass.getpass("Enter pass phrase for root key: ")
         else:
             root_verify = True
+            print("root verify is default TRue")
             if args.ca_password:
                 ca_password = args.ca_password
             else:
                 ca_password = getpass.getpass("Enter pass phrase for root key: ")
+            print(ca_password)
 
-    create_directories_and_prereq_files(False)
-    create_custom_config()
+    if os.path.exists("demoCA/private/") and os.path.exists("demoCA/newcerts/"):
+        print("demoCA already exists.")
+    else:
+        create_directories_and_prereq_files(False)
+        create_custom_config()
 
     if mode == "verification":
-        create_verification_cert(nonce, root_verify)
+        create_verification_cert(nonce, root_verify, ca_password, intermediate_password)
     else:
         create_certificate_chain(
             common_name=args.domain,
