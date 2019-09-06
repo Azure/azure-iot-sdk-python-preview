@@ -1,4 +1,8 @@
-![Build Status](https://azure-iot-sdks.visualstudio.com/azure-iot-sdks/_apis/build/status/python/python-preview)
+# ARCHIVED REPOSITORY
+
+*The work in this repository has graduated into the main repository for the Azure IoT client library for Python: [Azure/azure-iot-sdk-python](https://github.com/azure/azure-iot-sdk-python)*
+
+This repository is now archived and readonly.
 
 # Azure IoT Hub Python SDKs v2 - PREVIEW
 
