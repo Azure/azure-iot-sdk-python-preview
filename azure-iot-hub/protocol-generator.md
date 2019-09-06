@@ -3,7 +3,7 @@
 
 ## Getting Started
 To build the DPS Service Client, simply install AutoRest in Node.js via `npm` (`npm install -g autorest`) and then run:
-> `autorest protocol-generator.md --use=@microsoft.azure/autorest.python@~3.0.56 --add-credentials`
+> `autorest protocol-generator.md --add-credentials`
 
 To see additional help and options, run:
 > `autorest --help`
